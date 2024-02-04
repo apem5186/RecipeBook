@@ -45,3 +45,9 @@ hibernate {
     }
 }
 
+bootJar{
+    destinationDirectory = file("./target")
+    archiveBaseName = 'recipeBook'
+    archiveFileName = 'recipeBook.jar'
+    archiveVersion = "0.0.1"
+}
