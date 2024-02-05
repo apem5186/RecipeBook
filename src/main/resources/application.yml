@@ -1,17 +1,1 @@
-spring:
-  devtools:
-    livereload:
-      enabled: true
 
-  thymeleaf:
-    cache: false
-    prefix: file:src/main/resources/templates/
-  datasource:
-    url: jdbc:mysql://i2yxjrp5fa7yqfhb:r61lzgh2fsvurc1r@umabrisfx8afs3ja.cbetxkdyhwsb.us-east-1.rds.amazonaws.com:3306/lkqynp72hqbkmyy0
-    username: i2yxjrp5fa7yqfhb
-    password: r61lzgh2fsvurc1r
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
