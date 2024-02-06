@@ -2,6 +2,7 @@ package com.recipe.recipebook.controller;
 
 import com.recipe.recipebook.entity.TestEntity;
 import com.recipe.recipebook.repository.TestRepository;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-@Controller
+@Controller("/v3")
 @Slf4j
 public class TestController {
 
@@ -25,6 +26,7 @@ public class TestController {
         testRepository.save(testEntity);
     }
 
+    @Operation(description = "swagger test")
     @GetMapping("/")
     public String home(Model model) {
 
