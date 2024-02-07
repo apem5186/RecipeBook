@@ -27,7 +27,7 @@ public class TestController {
     }
 
     @Operation(description = "swagger test")
-    @GetMapping("/")
+    @GetMapping("/homeTest")
     public String home(Model model) {
 
         TestEntity testEntity = testRepository.findByStr("Test");

@@ -1,30 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Title</title>
+    <title>Recipe Book</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card-img-top {
+            border-radius: 10px 10px 0 0;
+            height: 200px;
+            object-fit: cover;
+        }
+        .card:hover {
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+        .card-body {
+            padding: 15px;
+        }
+        .card-title {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        .card-text {
+            color: #555;
+            font-size: 1rem;
+        }
+        .search-bar {
+            margin: 20px 0;
+        }
+    </style>
 </head>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    .container {
-        padding: 20px;
-        width: 100%;
-    }
-</style>
 <body>
-<div class="container">
-    <h1>Hello World!</h1>
-    <p>Test, ㄱㄴ가나, 1, @$%@$ㅆ@$ㅆa43a</p>
-    <span th:text="${Test}"></span>
-    <span th:text="${Number}"></span>
+
+<div class="container mt-3">
+    <h2>Recipe Book</h2>
+
+    <div class="search-bar">
+        <input class="form-control" type="search" placeholder="Search" aria-label="Search">
+    </div>
+
+    <div class="row">
+        <div class="col-md-4" th:each="item : ${items}">
+            <div class="card">
+                <img th:src="@{${item.thumbnailUrl}}" class="card-img-top" alt="Recipe Image">
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${item.title}">Recipe Title</h5>
+<!--                    <p class="card-text" th:text="${item.description}">Short description...</p>-->
+                    <!-- You can add more details here -->
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
 </body>
 </html>
