@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.io.IOException;
 import java.util.List;
@@ -25,5 +26,14 @@ public class HomeController {
         List<PlaylistDTO> playlistDTOS = playlistService.getPlaylist();
         model.addAttribute("items", playlistDTOS);
         return "home";
+    }
+
+    @Operation(summary = "개별페이지", description = "각 동영상 상세페이지")
+    @GetMapping("/detail/{id}")
+    public String detail(@PathVariable(name = "id") String id, Model model) {
+        PlaylistDTO playlistDTO = playlistService.getVideo(id);
+
+        model.addAttribute("item", playlistDTO);
+        return "detail";
     }
 }

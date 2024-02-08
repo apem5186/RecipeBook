@@ -7,7 +7,6 @@ import com.google.api.services.youtube.model.Thumbnail;
 import com.recipe.recipebook.dto.PlaylistDTO;
 import com.recipe.recipebook.entity.Playlist;
 import com.recipe.recipebook.repository.PlaylistRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -91,5 +89,10 @@ public class PlaylistService {
         return playlists.stream()
                 .map(PlaylistDTO::new)
                 .toList();
+    }
+
+    public PlaylistDTO getVideo(String videoId) {
+        Playlist playlist = playlistRepository.findByVideoId(videoId);
+        return new PlaylistDTO(playlist);
     }
 }
