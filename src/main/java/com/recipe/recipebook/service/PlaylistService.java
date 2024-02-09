@@ -4,9 +4,11 @@ import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.PlaylistItem;
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
 import com.google.api.services.youtube.model.Thumbnail;
+import com.recipe.recipebook.dto.EditVideoDTO;
 import com.recipe.recipebook.dto.PlaylistDTO;
 import com.recipe.recipebook.entity.Playlist;
 import com.recipe.recipebook.repository.PlaylistRepository;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,7 @@ public class PlaylistService {
         ).setApplicationName(APPLICATION_NAME).build();
     }
 
+    @Transactional
     public void youtubePlaylist() throws IOException {
         YouTube.PlaylistItems.List request = youTube.playlistItems().list("snippet");
         request.setKey(API_KEY);
@@ -94,5 +97,27 @@ public class PlaylistService {
     public PlaylistDTO getVideo(String videoId) {
         Playlist playlist = playlistRepository.findByVideoId(videoId);
         return new PlaylistDTO(playlist);
+    }
+
+    @Transactional
+    public void editVideo(EditVideoDTO editVideoDTO) {
+        Playlist playlist = playlistRepository.findByVideoId(editVideoDTO.getVideoId());
+
+        log.info("===================================");
+        log.info(playlist.getVideoId());
+        log.info(editVideoDTO.getTitle());
+        log.info(editVideoDTO.getVideoId());
+        log.info("===================================");
+
+        playlist.setTitle(editVideoDTO.getTitle());
+        playlist.setDescription(editVideoDTO.getDescription());
+
+        playlistRepository.save(playlist);
+    }
+
+    @Transactional
+    public void deleteVideo(String id) {
+        log.info("delete video id : " + id);
+        playlistRepository.deleteByVideoId(id);
     }
 }

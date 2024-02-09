@@ -1,5 +1,6 @@
 package com.recipe.recipebook.controller;
 
+import com.recipe.recipebook.dto.EditVideoDTO;
 import com.recipe.recipebook.dto.PlaylistDTO;
 import com.recipe.recipebook.service.PlaylistService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,5 +36,18 @@ public class HomeController {
 
         model.addAttribute("item", playlistDTO);
         return "detail";
+    }
+
+    @Operation(summary = "수정페이지", description = "각 동영상 수정페이지")
+    @GetMapping("/detail/{id}/edit")
+    public String edit(@PathVariable(name = "id") String id, Model model) {
+        PlaylistDTO playlistDTO = playlistService.getVideo(id);
+        EditVideoDTO editVideoDTO = new EditVideoDTO();
+        editVideoDTO.setTitle(playlistDTO.getTitle());
+        editVideoDTO.setDescription(playlistDTO.getDescription());
+
+        model.addAttribute("item", playlistDTO);
+        model.addAttribute("videoDTO", editVideoDTO);
+        return "edit";
     }
 }

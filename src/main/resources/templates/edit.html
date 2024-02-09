@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit | Recipe Book</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f7f7f7;
+            margin-top: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 10px;
+            background-color: #4CAF50;
+        }
+        .header .bi-arrow-left {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            color: white;
+            font-size: 1.5em;
+            text-decoration: none;
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            max-width: 500px;
+        }
+        h2 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .form-control {
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            border-radius: 20px;
+            padding: 10px 15px;
+            margin-right: 10px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border: none;
+        }
+        .btn-light {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a th:href="@{/}" class="bi bi-arrow-left"></a>
+    <span>Application Name</span>
+</div>
+
+<div class="container">
+    <h2>EDIT</h2>
+    <form th:action="@{|/edit/video/${item.videoId}|}" th:object="${videoDTO}" method="post">
+        <input type="text" th:field="*{title}" class="form-control" th:placeholder="${item.title}">
+        <textarea th:field="*{description}" class="form-control" rows="20" th:placeholder="${item.description}"></textarea>
+        <input type="hidden" th:field="*{videoId}">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-light" th:onclick="'window.history.back()'">Cancel</button>
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css"></script>
+</body>
+</html>
