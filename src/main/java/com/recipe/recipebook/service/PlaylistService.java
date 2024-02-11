@@ -8,6 +8,7 @@ import com.recipe.recipebook.dto.EditVideoDTO;
 import com.recipe.recipebook.dto.PlaylistDTO;
 import com.recipe.recipebook.entity.Playlist;
 import com.recipe.recipebook.repository.PlaylistRepository;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,8 +35,11 @@ public class PlaylistService {
 
     private final PlaylistRepository playlistRepository;
 
-    public PlaylistService(PlaylistRepository playlistRepository) {
+    private final EntityManager entityManager;
+
+    public PlaylistService(PlaylistRepository playlistRepository, EntityManager entityManager) {
         this.playlistRepository = playlistRepository;
+        this.entityManager = entityManager;
         this.youTube = new YouTube.Builder(
                 new com.google.api.client.http.javanet.NetHttpTransport(),
                 new com.google.api.client.json.jackson2.JacksonFactory(),
@@ -43,8 +47,13 @@ public class PlaylistService {
         ).setApplicationName(APPLICATION_NAME).build();
     }
 
+    /**
+     * Youtube 재생목록 가져옴
+     * @return List<Playlist>
+     * @throws IOException
+     */
     @Transactional
-    public void youtubePlaylist() throws IOException {
+    public List<Playlist> getList() throws IOException {
         YouTube.PlaylistItems.List request = youTube.playlistItems().list("snippet");
         request.setKey(API_KEY);
         request.setPlaylistId(PLAYLIST_ID);
@@ -75,10 +84,25 @@ public class PlaylistService {
             nextToken = response.getNextPageToken();
         } while (nextToken != null);
 
+        return playlists;
+    }
+
+    /**
+     * Youtube 재생목록을 DB에 저장
+     * @throws IOException
+     */
+    @Transactional
+    public void youtubePlaylist() throws IOException {
+        List<Playlist> playlists = getList();
         playlistRepository.saveAll(playlists);
 
     }
 
+    /**
+     * Youtube 재생목록을 DTO로 변환 후 반환
+     * @return List<PlaylistDTO>
+     * @throws IOException
+     */
     public List<PlaylistDTO> getPlaylist() throws IOException {
         List<Playlist> playlists = playlistRepository.findAll();
         if (playlists == null || playlists.isEmpty()) {
@@ -94,11 +118,20 @@ public class PlaylistService {
                 .toList();
     }
 
+    /**
+     * 매개변수로 videoId를 받아서 해당하는 playlist 객체를 DTO로 변환 후 반환
+     * @param videoId
+     * @return PlaylistDTO
+     */
     public PlaylistDTO getVideo(String videoId) {
         Playlist playlist = playlistRepository.findByVideoId(videoId);
         return new PlaylistDTO(playlist);
     }
 
+    /**
+     * editVideoDTO를 매개변수로 받아서 Playlist 객체 수정
+     * @param editVideoDTO
+     */
     @Transactional
     public void editVideo(EditVideoDTO editVideoDTO) {
         Playlist playlist = playlistRepository.findByVideoId(editVideoDTO.getVideoId());
@@ -115,9 +148,44 @@ public class PlaylistService {
         playlistRepository.save(playlist);
     }
 
+    /**
+     * videoId를 매개변수로 받아서 해당하는 Playlist 객체 삭제
+     * @param videoId
+     */
     @Transactional
-    public void deleteVideo(String id) {
-        log.info("delete video id : " + id);
-        playlistRepository.deleteByVideoId(id);
+    public void deleteVideo(String videoId) {
+        log.info("delete video id : " + videoId);
+        playlistRepository.deleteByVideoId(videoId);
     }
+
+    /**
+     * 재생목록 초기화, 테이블 데이터 삭제 후 다시 가져옴
+     * @throws IOException
+     */
+    @Transactional
+    public void initialization() throws IOException {
+        if (playlistRepository.count() > 0) {
+            log.info("실행됨");
+            playlistRepository.deleteAll();
+            entityManager.flush();
+            entityManager.clear();
+        }
+        youtubePlaylist();
+    }
+
+    /**
+     * Playlist 테이블에 없는 재생 목록을 가져옴
+     * @throws IOException
+     */
+    @Transactional
+    public void refresh() throws IOException {
+        List<Playlist> playlists = getList();
+        for (Playlist list : playlists) {
+            if (!playlistRepository.existsPlaylistByVideoId(list.getVideoId())) {
+                log.info(list.getVideoId());
+                playlistRepository.save(list);
+            }
+        }
+    }
+
 }

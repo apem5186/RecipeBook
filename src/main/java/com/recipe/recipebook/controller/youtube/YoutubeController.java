@@ -39,13 +39,6 @@ public class YoutubeController {
 
         return "redirect:/detail/" + id;
     }
-
-//    @Operation(summary = "동영상 삭제 요청")
-//    @DeleteMapping("/delete/video/{id}")
-//    public String deleteVideo(@PathVariable("id") String id) {
-//        playlistService.deleteVideo(id);
-//        return "home";
-//    }
     
     @Operation(summary = "동영상 삭제 요청")
     @DeleteMapping("/delete/video/{videoId}")
@@ -53,10 +46,34 @@ public class YoutubeController {
     public ResponseEntity<?> deleteVideo(@PathVariable String videoId) {
         try {
             playlistService.deleteVideo(videoId);
-            // Your delete logic here
             return ResponseEntity.ok().body("{\"message\": \"Video deleted successfully\"}");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"error\": \"" + e.getMessage() + "\"}");
         }
     }
+
+    @Operation(summary = "재생목록 새로고침")
+    @PostMapping("/refresh/video")
+    @ResponseBody
+    public ResponseEntity<?> refreshVideo() throws IOException {
+        try {
+            playlistService.refresh();
+            return ResponseEntity.ok().body("{\"message\": \"Video refresh successful\"}");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"error\": \"" + e.getMessage() + "\"}");
+        }
+    }
+
+    @Operation(summary = "재생목록 초기화")
+    @PostMapping("/initialize/video")
+    @ResponseBody
+    public ResponseEntity<?> initVideo() throws IOException {
+        try {
+            playlistService.initialization();
+            return ResponseEntity.ok().body("{\"message\": \"Playlist initialize successful\"}");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"error\": \"" + e.getMessage() + "\"}");
+        }
+    }
+
 }

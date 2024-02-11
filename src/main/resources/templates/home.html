@@ -39,7 +39,9 @@
         .image-container {
             position: relative;
         }
-
+        .refresh-icon {
+            font-size: 30px;
+        }
         .delete-icon {
             font-size: 1.3em; /* Size of the icon */
             color: #dc3545; /* Color of the icon */
@@ -87,9 +89,14 @@
         <input class="form-control" type="search" placeholder="Search" aria-label="Search">
     </div>
 
-    <div class="d-flex justify-content-end custom-switch">
+    <div class="d-flex justify-content-end custom-switch align-items-center">
+        <button id="initializeButton" class="btn btn-danger p-2 me-2 mb-1" type="button">초기화</button>
+        <button id="refreshButton" class="btn btn-link p-0 me-2 refresh-icon" type="button">
+            <i class="bi bi-arrow-clockwise"></i>
+        </button>
         <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" role="switch" id="toggleIconSwitch" checked>
+            <input class="form-check-input" type="checkbox" role="switch" id="toggleIconSwitch" checked
+                   title="삭제기능 on/off" data-bs-toggle="tooltip">
             <label class="form-check-label" for="toggleIconSwitch"></label>
         </div>
     </div>
@@ -118,6 +125,76 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', (event) => {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        const initializeButton = document.getElementById('initializeButton');
+        const refreshButton = document.getElementById('refreshButton');
+
+        initializeButton.addEventListener('click', function() {
+            // Display a confirmation dialog
+            if (confirm('정말로 초기화하시겠습니까?')) {
+                // Proceed with the fetch request if the user confirmed
+                fetch('/initialize/video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // 필요한 경우 CSRF 토큰 포함
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            // If the server response is not OK, throw an error
+                            throw new Error('서버에 문제가 발생했습니다!');
+                        }
+                        return response.json(); // Parse the response as JSON
+                    })
+                    .then(data => {
+                        alert(data.message); // Alert the user with the message from the response
+                        window.location.reload(); // Reload the page after successful reset
+                    })
+                    .catch(error => {
+                        console.error('재생 목록 초기화 중 오류 발생:', error); // Log any errors to the console
+                    });
+            } else {
+                // If the user cancels, you might want to do something here or simply do nothing
+                console.log('초기화가 취소되었습니다.');
+            }
+        });
+
+        refreshButton.addEventListener('click', function() {
+            // Display a confirmation dialog
+            if (confirm('새로고침하시겠습니까?')) {
+                // Proceed with the fetch request if the user confirmed
+                fetch('/refresh/video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // 필요한 경우 CSRF 토큰 포함
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            // If the server response is not OK, throw an error
+                            throw new Error('서버에 문제가 발생했습니다!');
+                        }
+                        return response.json(); // Parse the response as JSON
+                    })
+                    .then(data => {
+                        alert(data.message); // Alert the user with the message from the response
+                        window.location.reload(); // Reload the page after successful refresh
+                    })
+                    .catch(error => {
+                        console.error('재생목록 새로고침 중 오류 발생:', error); // Log any errors to the console
+                    });
+            } else {
+                // If the user cancels, you might want to do something here or simply do nothing
+                console.log('새로고침이 취소되었습니다.');
+            }
+        });
+
         document.querySelectorAll('a.delete-icon').forEach(function (element) {
             element.addEventListener('click', function (event) {
                 // Prevent the default anchor behavior and stop event propagation

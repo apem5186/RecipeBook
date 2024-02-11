@@ -8,4 +8,6 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
     Playlist findByVideoId(String id);
 
     void deleteByVideoId(String id);
+
+    Boolean existsPlaylistByVideoId(String videoId);
 }
