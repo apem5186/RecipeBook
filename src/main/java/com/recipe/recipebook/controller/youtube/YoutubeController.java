@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Controller
@@ -76,4 +78,26 @@ public class YoutubeController {
         }
     }
 
+    @Operation(summary = "description 요약")
+    @PostMapping("/summarize/description/{videoId}")
+    @ResponseBody
+    public ResponseEntity<?> summarizeDescription(@PathVariable String videoId) {
+        String summary = playlistService.summarizeRecipe(videoId);
+
+        return ResponseEntity.ok(summary);
+    }
+
+    @Operation(summary = "chatGPT의 사용 가능한 모델 조회")
+    @GetMapping("/api/v1/chatGpt/modelList")
+    public ResponseEntity<List<Map<String, Object>>> selectModelList() {
+        List<Map<String, Object>> result = playlistService.modelList();
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @Operation(summary = "chatGPT에서 특정 모델이 사용 가능한지 조회")
+    @GetMapping("/api/v1/chatGpt/model")
+    public ResponseEntity<Map<String, Object>> isValidModel(@RequestParam(name = "modelName") String modelName) {
+
+        Map<String, Object> result = playlistService.isValidModel(modelName);
+        return new ResponseEntity<>(result, HttpStatus.OK);}
 }
