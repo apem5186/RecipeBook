@@ -48,6 +48,23 @@
         .edit-icon img {
             cursor: pointer;
         }
+        .button-loading {
+            animation: spin 1s linear infinite;
+        }
+        .rotation {
+            animation: spin 1s linear infinite;
+        }
+        .bi-arrow-clockwise {
+            font-size: 1.5em;
+            margin-right: 5px;
+            border: none;
+            background-color: transparent;
+            color: #007bff;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg);}
+            100% {transform: rotate(360deg);}
+        }
         .detail-text {
             background-color: #f9f9f9; /* Very light gray, almost white for a modern feel */
             border-radius: 8px; /* Slightly rounded corners for a softer look */
@@ -94,14 +111,58 @@
         <div class="title-container">
             <h2 class="detail-title" th:text="${item.title}">Recipe Title</h2>
             <div class="edit-icon">
+                <button th:data-video-id="${item.videoId}" id="summaryButton" class="bi bi-arrow-clockwise"
+                        data-bs-toggle="tooltip" title="*주의! chatGPT를 통해 요약하므로 정확하지 않을 수 있습니다."> </button>
                 <a th:href="@{|/detail/${item.videoId}/edit|}" class="bi bi-pencil" style="font-size: 1.5em;"></a>
             </div>
         </div>
+
         <p class="detail-description" th:text="${item.description}">Description of the recipe...</p>
         <!-- Add more content as necessary -->
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
 
+        document.querySelectorAll('.bi-arrow-clockwise').forEach(button => {
+            button.onclick = () => summarizeDescription(button);
+        });
+
+        function summarizeDescription(element) {
+            element.classList.add('button-loading');  // Add the loading class
+            const videoId = element.getAttribute('data-video-id');
+
+            fetch(`/summarize/description/${videoId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Include CSRF token if needed
+                }
+                // Include body or credentials if needed
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok.');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data);
+                    window.location.reload();
+                    console.log("reload");
+                    // Process your data here
+                })
+                .catch(error => {
+                    console.error('An error occurred while refreshing the playlist:', error);
+                })
+                .finally(() => {
+                    element.classList.remove('button-loading');  // Remove the loading class
+                });
+        }
+    });
+
+
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
 
 </body>

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.PlaylistItem;
@@ -23,10 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -208,14 +206,8 @@ public class PlaylistService {
 
     @Transactional
     public String summarizeRecipe(String videoId) {
-        String description = playlistRepository.findByVideoId(videoId).getDescription();
-
-        String prompt = String.format("""
-            From this description, I need to extract only the cooking ingredients and the recipe steps. Here's the description:\s
-
-            %s
-
-            Based on the description above, can you list the ingredients and clearly summarize the recipe steps in Korean?""", description);
+        Playlist playlist = playlistRepository.findByVideoId(videoId);
+        String description = playlist.getDescription();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(CHATGPT_API_KEY);
@@ -224,9 +216,18 @@ public class PlaylistService {
 
         OpenAiRequestDTO openAIRequest = OpenAiRequestDTO.builder()
                 .model(CHATGPT_API_MODEL)
-                .prompt(prompt)
+                .messages(Arrays.asList(
+                        OpenAiRequestDTO.Message.builder()
+                                .role("system")
+                                .content("Please extract and list only the ingredients and recipes in Korean in this cooking description.")
+                                .build(),
+                        OpenAiRequestDTO.Message.builder()
+                                .role("user")
+                                .content(description)
+                                .build()
+                ))
                 .temperature(0.5)
-                .max_tokens(7)
+                .max_tokens(2000)
                 .top_p(1.0)
                 .frequency_penalty(0.0)
                 .presence_penalty(0.0)
@@ -237,15 +238,25 @@ public class PlaylistService {
         try {
             body = objectMapper.writeValueAsString(openAIRequest);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            // 적절한 예외 처리를 추가하세요
+            log.error("JsonProcessingException : " + e);
         }
 
         HttpEntity<String> entity = new HttpEntity<>(body, headers);
 
-        ResponseEntity<String> response = restTemplate.postForEntity("https://api.openai.com/v1/completions", entity, String.class);
+        ResponseEntity<String> response = restTemplate.postForEntity("https://api.openai.com/v1/chat/completions", entity, String.class);
 
         log.info("Extracted Text : \n " + response.getBody());
+        try {
+            JsonNode rootNode = objectMapper.readTree(response.getBody());
+            String newDescription = rootNode.path("choices").get(0).path("message").path("content").asText();
+            if (Objects.equals(rootNode.path("choices").get(0).path("finish_reason").asText(), "length"))
+                newDescription = newDescription + "\n\n max_tokens 초과로 텍스트 짤림";
+            playlist.setDescription(newDescription);
+
+            playlistRepository.save(playlist);
+        } catch (JsonProcessingException e) {
+            log.error("JsonProcessingException : " + e);
+        }
 
         return response.getBody();
     }
