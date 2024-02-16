@@ -19,12 +19,15 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -117,21 +120,25 @@ public class PlaylistService {
     /**
      * Youtube 재생목록을 DTO로 변환 후 반환
      * @return List<PlaylistDTO>
-     * @throws IOException
      */
-    public List<PlaylistDTO> getPlaylist() throws IOException {
-        List<Playlist> playlists = playlistRepository.findAll();
-        if (playlists == null || playlists.isEmpty()) {
+    public List<PlaylistDTO> getPlaylist(int page, int pageSize) {
+        Pageable pageable = PageRequest.of(page, pageSize);
+        List<Playlist> playlists = playlistRepository.findAll(pageable).getContent();
+        if (playlists.isEmpty()) {
             log.info("==============================");
-            log.info("Playlist is Empty");
+            log.info("Playlist is Empty, fetching from YouTube...");
             log.info("==============================");
-            youtubePlaylist();
-            playlists = playlistRepository.findAll();
+            try {
+                youtubePlaylist();
+                playlists = playlistRepository.findAll(pageable).getContent();
+            } catch (IOException e) {
+                log.error("Failed to fetch playlists from YouTube", e);
+            }
         }
 
         return playlists.stream()
                 .map(PlaylistDTO::new)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     /**
@@ -194,8 +201,13 @@ public class PlaylistService {
      * @throws IOException
      */
     @Transactional
-    public void refresh() throws IOException {
-        List<Playlist> playlists = getList();
+    public void refresh() {
+        List<Playlist> playlists = new ArrayList<>();
+        try {
+            playlists = getList();
+        } catch (IOException e) {
+            log.error("getList Method Error while refreshing...\n" + e);
+        }
         for (Playlist list : playlists) {
             if (!playlistRepository.existsPlaylistByVideoId(list.getVideoId())) {
                 log.info(list.getVideoId());
@@ -334,5 +346,18 @@ public class PlaylistService {
             throw new RuntimeException(e);
         }
         return result;
+    }
+
+    /**
+     * Mobile은 10 PC는 30, pageSize를 결정함
+     * @param userAgent Mobile로 접속한 건지 PC로 접속한 건지
+     * @return pageSize
+     */
+    public int determinePageSize(String userAgent) {
+        if (userAgent != null && userAgent.contains("Mobi")) {
+            return 10;
+        } else {
+            return 5;
+        }
     }
 }

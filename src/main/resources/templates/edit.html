@@ -63,7 +63,7 @@
 <body>
 
 <div class="header">
-    <a th:href="@{/}" class="bi bi-arrow-left"></a>
+    <a th:href="@{/}" class="bi bi-arrow-left back-home"></a>
     <span>Application Name</span>
 </div>
 
@@ -77,7 +77,15 @@
         <button type="button" class="btn btn-light" th:onclick="'window.history.back()'">Cancel</button>
     </form>
 </div>
-
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const backHomeLink = document.querySelectorAll('.back-home');
+        const currentPage = sessionStorage.getItem('currentPage') || 0;
+        backHomeLink.forEach(link => {
+            link.setAttribute('href', `/?page=${currentPage}`);
+        });
+    })
+</script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css"></script>
 </body>

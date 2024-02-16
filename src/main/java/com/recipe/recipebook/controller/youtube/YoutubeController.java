@@ -12,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.WebRequest;
 
 import java.io.IOException;
 import java.util.List;
@@ -25,10 +26,14 @@ public class YoutubeController {
 
     private final PlaylistService playlistService;
 
-    @Operation
-    @GetMapping("/playlist")
-    public List<PlaylistDTO> getPlaylistItems() throws IOException {
-        return playlistService.getPlaylist();
+    @Operation(summary = "JSON Data 반환용 컨트롤러", description = "무한 스크롤을 위해 플레이리스트를 Json으로 반환")
+    @ResponseBody
+    @GetMapping("/playlists")
+    public ResponseEntity<List<PlaylistDTO>> fetchPlaylists(@RequestParam(value = "page") int page,
+                                                            WebRequest webRequest) {
+        String userAgent = webRequest.getHeader("User-Agent");
+        List<PlaylistDTO> playlistDTOS = playlistService.getPlaylist(page, playlistService.determinePageSize(userAgent));
+        return ResponseEntity.ok(playlistDTOS); // 무한 스크롤을 위해 JSON data 반환
     }
 
     @Operation(summary = "동영상 수정 요청")
@@ -57,7 +62,7 @@ public class YoutubeController {
     @Operation(summary = "재생목록 새로고침")
     @PostMapping("/refresh/video")
     @ResponseBody
-    public ResponseEntity<?> refreshVideo() throws IOException {
+    public ResponseEntity<?> refreshVideo() {
         try {
             playlistService.refresh();
             return ResponseEntity.ok().body("{\"message\": \"Video refresh successful\"}");

@@ -125,6 +125,100 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', (event) => {
+        let currentPage = parseInt(sessionStorage.getItem("currentPage")) || 1; // 세션에 값을 가져오거나 없으면 1
+        const pageSize = window.innerWidth <= 768 ? 10 : 5; // 모바일은 10, PC는 30
+        let isFetching = false; // 현재 데이터를 가져오고 있는지 상태를 표시
+        let isEndOfData = false; // 데이터가 더 이상 없는지 상태를 표시
+
+        window.addEventListener('scroll', () => {
+            const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+            if (scrollTop + clientHeight >= scrollHeight - 5) { // 스크롤이 페이지 하단에 거의 도달했는지 확인
+                fetchPlaylist();    // 추가 데이터 요청
+            }
+        });
+
+        window.addEventListener('popstate', event => {
+            if (event.state && event.state.page) {
+                currentPage = event.state.page;
+            }
+        })
+
+        function fetchPlaylist() {
+            if (isFetching || isEndOfData) return;
+
+            isFetching = true;
+            fetch(`/playlists?page=${currentPage}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.length < pageSize) {
+                        isEndOfData = true; // 받아온 데이터 수가 pageSize보다 작으면 더 이상 데이터가 없는 것으로 간주
+                    }
+                    sessionStorage.setItem("currentPage", currentPage.toString());  // 현재 페이지 넘버 저장
+                    if (!isEndOfData) {
+                        history.pushState({ page: currentPage }, '', `/?page=${currentPage}`);
+                        currentPage += 1;   // 더 받아올 데이터가 있다면 페이지 번호 증가
+                    }
+                    appendPlaylists(data); // DOM에 받아온 데이터 추가
+                    isFetching = false;
+                    console.log(currentPage);
+                })
+                .catch(error => {
+                    console.error('Error fetching playlists:', error);
+                    isFetching = false;
+                });
+        }
+
+        function appendPlaylists(playlists) {
+            const row = document.querySelector('.row');
+            playlists.forEach(playlist => {
+                const col = document.createElement('div');
+                col.className = 'col-md-4';
+                col.id = 'video-' + playlist.videoId;
+
+                const cardLink = document.createElement('a');
+                cardLink.href = '/detail/' + playlist.videoId;
+                cardLink.className = 'card-link';
+
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'image-container position-relative';
+
+                const img = document.createElement('img');
+                img.src = playlist.thumbnailUrl;
+                img.className = 'card-img-top';
+                img.alt = 'Recipe Image';
+
+                const deleteIconLink = document.createElement('a');
+                deleteIconLink.href = '#';
+                deleteIconLink.className = 'delete-icon position-absolute top-0 end-0';
+                deleteIconLink.dataset.videoId = playlist.videoId;  // Custom data attribute to store the video ID
+
+                const deleteIcon = document.createElement('span');
+                deleteIcon.className = 'delete-icon position-absolute top-0 end-0 bi bi-x-circle-fill hidden';
+
+                const cardBody = document.createElement('div');
+                cardBody.className = 'card-body';
+
+                const cardTitle = document.createElement('h5');
+                cardTitle.className = 'card-title';
+                cardTitle.textContent = playlist.title;
+
+                // Construct the elements hierarchy
+                deleteIconLink.appendChild(deleteIcon);
+                imageContainer.appendChild(img);
+                imageContainer.appendChild(deleteIconLink);
+                card.appendChild(imageContainer);
+                cardBody.appendChild(cardTitle);
+                card.appendChild(cardBody);
+                cardLink.appendChild(card);
+                col.appendChild(cardLink);
+                row.appendChild(col);
+            });
+        }
+
+
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
