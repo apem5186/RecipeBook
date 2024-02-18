@@ -63,8 +63,9 @@
 <body>
 
 <div class="header">
-    <a th:href="@{/}" class="bi bi-arrow-left back-home"></a>
-    <span>Application Name</span>
+    <a href="/" class="back-home" style="text-decoration: none; color: inherit;">
+        <span>Recipe Book</span>
+    </a>
 </div>
 
 <div class="container">
@@ -79,10 +80,13 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const currentPage = sessionStorage.getItem('currentPage');
+
         const backHomeLink = document.querySelectorAll('.back-home');
-        const currentPage = sessionStorage.getItem('currentPage') || 0;
+
         backHomeLink.forEach(link => {
-            link.setAttribute('href', `/?page=${currentPage}`);
+            console.log(currentPage);
+            link.href = `/?page=${currentPage}`;
         });
     })
 </script>

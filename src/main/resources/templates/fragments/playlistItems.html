@@ -1,0 +1,21 @@
+<!-- fragments/playlistItems.html -->
+<div class="row">
+    <div class="col-md-4" th:each="item : ${items}" th:id="'video-' + ${item.videoId}">
+        <a th:href="@{'/detail/' + ${item.videoId}}" class="card-link">
+            <div class="card">
+                <!-- Image container with relative positioning -->
+                <div class="image-container position-relative">
+                    <img th:src="@{${item.thumbnailUrl}}" class="card-img-top" alt="Recipe Image">
+                    <!-- Absolutely positioned 'x' icon inside the container -->
+                    <a href="#" class="delete-icon position-absolute top-0 end-0" th:data-video-id="${item.videoId}">
+                        <span class="delete-icon position-absolute top-0 end-0 bi bi-x-circle-fill hidden"></span>
+                    </a>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title" th:text="${item.title}">Recipe Title</h5>
+                    <!-- Description is commented out -->
+                </div>
+            </div>
+        </a>
+    </div>
+</div>

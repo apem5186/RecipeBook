@@ -25,14 +25,13 @@ public class HomeController {
     
     private final PlaylistService playlistService;
     
-    // TODO : 페이지 불러오는 거 캐싱 활용 고려해보기
     @Operation(summary = "메인페이지", description = "재생목록 띄워주는 곳")
     @GetMapping("/")
-    public String home(Model model, @RequestParam(value = "page", required = false) Integer page,
+    public String home(Model model, @RequestParam(value = "page", defaultValue = "0") Integer page,
                        WebRequest webRequest) {
         if (page == null) page = 0;
-        List<PlaylistDTO> totalPlaylistDTOS = new ArrayList<>();
         String userAgent = webRequest.getHeader("User-Agent");
+        List<PlaylistDTO> totalPlaylistDTOS = new ArrayList<>();
         for (int i = 0; i <= page; i++) {
             List<PlaylistDTO> playlistDTOS = playlistService.getPlaylist(i, playlistService.determinePageSize(userAgent));
             totalPlaylistDTOS.addAll(playlistDTOS);

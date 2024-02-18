@@ -27,13 +27,13 @@ public class YoutubeController {
     private final PlaylistService playlistService;
 
     @Operation(summary = "JSON Data 반환용 컨트롤러", description = "무한 스크롤을 위해 플레이리스트를 Json으로 반환")
-    @ResponseBody
-    @GetMapping("/playlists")
-    public ResponseEntity<List<PlaylistDTO>> fetchPlaylists(@RequestParam(value = "page") int page,
+    @GetMapping("/playlists/fragment")
+    public String fetchPlaylists(Model model, @RequestParam(value = "page") int page,
                                                             WebRequest webRequest) {
         String userAgent = webRequest.getHeader("User-Agent");
         List<PlaylistDTO> playlistDTOS = playlistService.getPlaylist(page, playlistService.determinePageSize(userAgent));
-        return ResponseEntity.ok(playlistDTOS); // 무한 스크롤을 위해 JSON data 반환
+        model.addAttribute("items", playlistDTOS);
+        return "fragments/playlistItems"; // 무한 스크롤을 위해 JSON data 반환
     }
 
     @Operation(summary = "동영상 수정 요청")

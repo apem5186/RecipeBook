@@ -96,8 +96,8 @@
 <body>
 
 <div class="header">
-    <a th:href="@{/}" class="bi bi-arrow-left back-home" style="text-decoration: none; color: inherit; font-size: 1.5em;"></a>
-    <a th:href="@{/}" class="back-home" style="text-decoration: none; color: inherit;">
+    <a href="/" class="bi bi-arrow-left back-home" style="text-decoration: none; color: inherit; font-size: 1.5em;"></a>
+    <a href="/" class="back-home" style="text-decoration: none; color: inherit;">
         <span>Recipe Book</span>
     </a>
 </div>
@@ -123,11 +123,15 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const currentPage = sessionStorage.getItem('currentPage');
+
         const backHomeLink = document.querySelectorAll('.back-home');
-        const currentPage = sessionStorage.getItem('currentPage') || 0;
+
         backHomeLink.forEach(link => {
-            link.setAttribute('href', `/?page=${currentPage}`);
+            console.log(currentPage);
+            link.href = `/?page=${currentPage}`;
         });
+
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
