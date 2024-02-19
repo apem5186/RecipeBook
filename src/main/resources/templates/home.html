@@ -167,7 +167,8 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', (event) => {
-        let currentPage = 0;
+        const params = new URLSearchParams(window.location.search);
+        let currentPage = parseInt(params.get('page')) || 0;
         const pageSize = window.innerWidth <= 768 ? 10 : 5; // 모바일은 10, PC는 30
         let isFetching = false; // 현재 데이터를 가져오고 있는지 상태를 표시
         let isEndOfData = false; // 데이터가 더 이상 없는지 상태를 표시
