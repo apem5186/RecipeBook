@@ -19,6 +19,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
@@ -93,8 +94,9 @@ public class PlaylistService {
                 String videoId = item.getSnippet().getResourceId().getVideoId();
                 String title = item.getSnippet().getTitle();
                 String description = item.getSnippet().getDescription();
-                Thumbnail highQualityThumbnail = item.getSnippet().getThumbnails().getDefault();
-                String thumbnailUrl = highQualityThumbnail != null ? highQualityThumbnail.getUrl() : null;
+                Thumbnail highQualityThumbnail = item.getSnippet().getThumbnails().getMaxres();
+                String thumbnailUrl = highQualityThumbnail != null ? highQualityThumbnail.getUrl() :
+                        item.getSnippet().getThumbnails().getStandard().getUrl();
 
                 Playlist playlist = new Playlist(videoId, title, description, thumbnailUrl);
                 playlists.add(playlist);
@@ -179,6 +181,19 @@ public class PlaylistService {
     public void deleteVideo(String videoId) {
         log.info("delete video id : " + videoId);
         playlistRepository.deleteByVideoId(videoId);
+    }
+
+    /**
+     * title를 받아서 Playlist를 검색함
+     * @param title
+     * @param page
+     * @param pageSize
+     * @return List<PlaylistDTO>
+     */
+    public List<PlaylistDTO> searchByTitle(String title, int page, int pageSize) {
+        Pageable pageable = PageRequest.of(page, pageSize);
+        Page<Playlist> playlist = playlistRepository.findByTitleContainingIgnoreCase(title, pageable);
+        return playlist.stream().map(PlaylistDTO::new).collect(Collectors.toList());
     }
 
     /**

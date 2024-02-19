@@ -10,6 +10,47 @@
             font-family: 'Arial', sans-serif;
             background-color: #f8f9fa;
         }
+        .search-form {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            border: 2px solid #d1d1d1;
+            border-radius: 10px 0 0 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #a0a0a0;
+        }
+
+        .search-button {
+            padding: 10px 20px;
+            border: 2px solid #4CAF50;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 0 10px 10px 0;
+            transition: background-color 0.3s, border-color 0.3s;
+            outline: none;
+        }
+
+        .search-button:hover,
+        .search-button:focus {
+            background-color: #45a049;
+            border-color: #45a049;
+        }
+
+        /* Optional: Add some box-shadow to the form for depth */
+        /*.search-form {*/
+        /*    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);*/
+        /*}*/
         .card {
             border: none;
             border-radius: 10px;
@@ -85,9 +126,10 @@
 <div class="container mt-3">
     <h2>Recipe Book</h2>
 
-    <div class="search-bar">
-        <input class="form-control" type="search" placeholder="Search" aria-label="Search">
-    </div>
+    <form action="/search" method="get" class="search-form">
+        <input type="text" name="query" placeholder="Search..." class="search-input"/>
+        <button type="submit" class="search-button">Search</button>
+    </form>
 
     <div class="d-flex justify-content-end custom-switch align-items-center">
         <button id="initializeButton" class="btn btn-danger p-2 me-2 mb-1" type="button">초기화</button>
@@ -140,21 +182,37 @@
 
         function fetchAndAppendPlaylists(page) {
             isFetching = true;
-            fetch(`/playlists/fragment?page=${page}`)
+
+            // 'query' parameter가 url에 있는지
+            const params = new URLSearchParams(window.location.search);
+            const queryParamExists = params.has('query');
+            const queryParamValue = queryParamExists ? params.get('query') : '';
+
+            // queryParamExists 유무에 따라 fetchUrl이 바뀜
+            const fetchUrl = queryParamExists
+                ? `/search/fragment?query=${encodeURIComponent(queryParamValue)}&page=${page}`
+                : `/playlists/fragment?page=${page}`;
+
+            fetch(fetchUrl)
                 .then(response => response.text())
                 .then(html => {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
                     const newItems = doc.querySelectorAll('.col-md-4');
 
-                    if (newItems.length === 0 || newItems.length < pageSize) {
+                    if (newItems.length === 0) {
                         isEndOfData = true;
                     } else {
                         const container = document.querySelector('.row');
                         newItems.forEach(item => container.appendChild(item.cloneNode(true)));
-                        history.pushState({ page: page }, '', `/?page=${page}`);
+
+                        // queryParamExists 유무에 따라 pushState에 넣는 url이 달라짐
+                        const newUrl = queryParamExists ? `/search?query=${encodeURIComponent(queryParamValue)}&page=${page}` : `/?page=${page}`;
+                        history.pushState({ page: page }, '', newUrl);
                         sessionStorage.setItem('currentPage', page.toString());
                         getDeleteIcons();
+                        if (newItems.length < pageSize)
+                            isEndOfData = true;
                     }
                     isFetching = false;
                 }).catch(error => {

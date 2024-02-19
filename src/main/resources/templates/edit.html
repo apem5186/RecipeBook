@@ -86,7 +86,7 @@
 
         backHomeLink.forEach(link => {
             console.log(currentPage);
-            link.href = `/?page=${currentPage}`;
+            link.href = currentPage ? `/?page=${currentPage}` : `/`;
         });
     })
 </script>

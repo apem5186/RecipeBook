@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -57,6 +58,31 @@ public class YoutubeController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("{\"error\": \"" + e.getMessage() + "\"}");
         }
+    }
+
+    @Operation(summary = "동영상 검색")
+    @GetMapping("/search")
+    public String searchPlaylist(@RequestParam String query, @RequestParam(value = "page", defaultValue = "0") int page, Model model,
+                                 WebRequest webRequest) {
+        String userAgent = webRequest.getHeader("User-Agent");
+        List<PlaylistDTO> totalPlaylistDTOS = new ArrayList<>();
+        for (int i = 0; i <= page; i++) {
+            List<PlaylistDTO> playlistDTOS = playlistService.searchByTitle(query, page, playlistService.determinePageSize(userAgent));
+            totalPlaylistDTOS.addAll(playlistDTOS);
+        }
+        model.addAttribute("items", totalPlaylistDTOS);
+
+        return "home";
+    }
+
+    @Operation(summary = "동영상 검색 추가 요청")
+    @GetMapping("/search/fragment")
+    public String searchPlaylistMore(Model model, @RequestParam String query, @RequestParam(value = "page") int page,
+                                 WebRequest webRequest) {
+        String userAgent = webRequest.getHeader("User-Agent");
+        List<PlaylistDTO> playlistDTOS = playlistService.searchByTitle(query, page, playlistService.determinePageSize(userAgent));
+        model.addAttribute("items", playlistDTOS);
+        return "fragments/playlistItems"; // 무한 스크롤을 위해 JSON data 반환
     }
 
     @Operation(summary = "재생목록 새로고침")

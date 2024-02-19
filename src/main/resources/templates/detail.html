@@ -129,7 +129,8 @@
 
         backHomeLink.forEach(link => {
             console.log(currentPage);
-            link.href = `/?page=${currentPage}`;
+
+            link.href = currentPage ? `/?page=${currentPage}` : `/`;
         });
 
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
