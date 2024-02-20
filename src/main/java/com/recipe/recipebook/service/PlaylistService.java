@@ -184,6 +184,29 @@ public class PlaylistService {
     }
 
     /**
+     * 즐겨찾기 토글 기능 Favorite True/False
+     * @param videoId
+     */
+    @Transactional
+    public void toggleFavorite(String videoId) {
+        Playlist playlist = playlistRepository.findByVideoId(videoId);
+        playlist.setFavorite(!playlist.isFavorite());
+        playlistRepository.save(playlist);
+    }
+
+    /**
+     * Favorite이 True인 객체들을 DTO로 변환 후 반환
+     * @return List<PlaylistDTO>
+     */
+    public List<PlaylistDTO> findFavorite() {
+        List<Playlist> playlists = playlistRepository.findByFavoriteTrue();
+
+        return playlists.stream()
+                .map(PlaylistDTO::new)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * title를 받아서 Playlist를 검색함
      * @param title
      * @param page

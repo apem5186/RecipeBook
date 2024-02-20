@@ -1,6 +1,7 @@
 package com.recipe.recipebook.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -27,6 +28,9 @@ public class Playlist {
 
     @Column
     private String thumbnailUrl;
+
+    @Column
+    private boolean favorite = false;
 
     public Playlist(String videoId, String title, String description, String thumbnailUrl) {
         this.videoId = videoId;

@@ -60,6 +60,13 @@ public class YoutubeController {
         }
     }
 
+    @Operation(summary = "동영상 즐겨찾기 토글")
+    @PostMapping("/toggleFavorite")
+    public ResponseEntity<?> toggleFavorite(@RequestParam String videoId) {
+        playlistService.toggleFavorite(videoId);
+        return ResponseEntity.ok().build();
+    }
+
     @Operation(summary = "동영상 검색")
     @GetMapping("/search")
     public String searchPlaylist(@RequestParam String query, @RequestParam(value = "page", defaultValue = "0") int page, Model model,

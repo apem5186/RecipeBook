@@ -111,6 +111,8 @@
         <div class="title-container">
             <h2 class="detail-title" th:text="${item.title}">Recipe Title</h2>
             <div class="edit-icon">
+                <i class="bi bi-star" id="favoriteIcon" th:data-video-id="${item.videoId}" th:data-favorite="${item.favorite}"
+                   style="font-size: 1.5em; cursor: pointer;"></i>
                 <button th:data-video-id="${item.videoId}" id="summaryButton" class="bi bi-arrow-clockwise"
                         data-bs-toggle="tooltip" data-bs-title="*주의! chatGPT를 통해 요약하므로 정확하지 않을 수 있습니다."></button>
                 <a th:href="@{|/detail/${item.videoId}/edit|}" class="bi bi-pencil" style="font-size: 1.5em;"></a>
@@ -123,6 +125,11 @@
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const favoriteIcon = document.getElementById('favoriteIcon');
+        const isFavorite = favoriteIcon.getAttribute('data-favorite') === 'true';
+        favoriteIcon.classList.remove('bi-star', 'bi-star-fill');
+        favoriteIcon.classList.add(isFavorite ? 'bi-star-fill' : 'bi-star');
+
         const currentPage = sessionStorage.getItem('currentPage');
 
         const backHomeLink = document.querySelectorAll('.back-home');
@@ -131,6 +138,32 @@
             console.log(currentPage);
 
             link.href = currentPage ? `/?page=${currentPage}` : `/`;
+        });
+
+        favoriteIcon.addEventListener('click', function () {
+            const videoId = this.getAttribute('data-video-id');
+
+
+            // Toggle icon class
+            const newFavoriteState = !this.classList.contains('bi-star-fill');
+            this.classList.toggle('bi-star-fill', newFavoriteState);
+            this.classList.toggle('bi-star', !newFavoriteState);
+
+            // favorite 상태에 따라 AJAX 요청을 보냄
+            fetch(`/toggleFavorite?videoId=${videoId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error('Failed to toggle favorite');
+                        this.classList.toggle('bi-star-fill', !newFavoriteState);
+                        this.classList.toggle('bi-star', newFavoriteState);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
         });
 
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));

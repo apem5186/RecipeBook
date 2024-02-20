@@ -47,6 +47,21 @@
             border-color: #45a049;
         }
 
+        .favorites-section h3 {
+            color: #f0ad4e; /* Gold color for favorites heading */
+        }
+
+        .favorite-card {
+            border: 2px solid #f0ad4e; /* Gold border for favorite cards */
+        }
+
+        .favorite-icon {
+            color: #f0ad4e; /* Gold color for the filled star */
+            font-size: 1.5em;
+            top: 0.5em;
+            right: 0.5em;
+        }
+
         /* Optional: Add some box-shadow to the form for depth */
         /*.search-form {*/
         /*    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);*/
@@ -140,6 +155,29 @@
             <input class="form-check-input" type="checkbox" role="switch" id="toggleIconSwitch" checked
                    title="삭제기능 on/off" data-bs-toggle="tooltip">
             <label class="form-check-label" for="toggleIconSwitch"></label>
+        </div>
+    </div>
+
+    <!-- TODO : 뒤로가기 및 새로고침, 홈버튼 실행 시에도 나타나게 수정 -->
+    <!-- TODO : 추가 데이터 불러올 때 데이터가 올바른 위치에 나타나도록 수정 -->
+    <!-- Favorites Section -->
+    <div class="favorites-section mb-4">
+        <h3 class="mb-3">★ Favorite Recipes</h3>
+        <div class="row">
+            <div class="col-md-4" th:each="favorite : ${favorites}" th:if="${favorite.favorite}">
+                <a th:href="@{'/detail/' + ${favorite.videoId}}" class="card-link">
+                    <div class="card favorite-card">
+                        <div class="image-container position-relative">
+                            <img th:src="@{${favorite.thumbnailUrl}}" class="card-img-top" alt="Recipe Image">
+                            <!-- Favorite icon -->
+                            <i class="bi bi-star-fill favorite-icon position-absolute top-0 end-0"></i>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${favorite.title}">Favorite Recipe Title</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
         </div>
     </div>
 

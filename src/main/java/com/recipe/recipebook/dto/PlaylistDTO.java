@@ -16,10 +16,13 @@ public class PlaylistDTO {
 
     private String thumbnailUrl;
 
+    private boolean favorite;
+
     public PlaylistDTO(Playlist playlist) {
         this.videoId = playlist.getVideoId();
         this.title = playlist.getTitle();
         this.description = playlist.getDescription();
         this.thumbnailUrl = playlist.getThumbnailUrl();
+        this.favorite = playlist.isFavorite();
     }
 }

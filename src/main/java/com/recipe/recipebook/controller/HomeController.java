@@ -31,6 +31,8 @@ public class HomeController {
                        WebRequest webRequest) {
         if (page == null) page = 0;
         String userAgent = webRequest.getHeader("User-Agent");
+        List<PlaylistDTO> favorites = playlistService.findFavorite();
+        model.addAttribute("favorites", favorites);
         List<PlaylistDTO> totalPlaylistDTOS = new ArrayList<>();
         for (int i = 0; i <= page; i++) {
             List<PlaylistDTO> playlistDTOS = playlistService.getPlaylist(i, playlistService.determinePageSize(userAgent));

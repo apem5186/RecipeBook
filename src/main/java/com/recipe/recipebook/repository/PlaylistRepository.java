@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
 
     Playlist findByVideoId(String id);
@@ -14,4 +16,6 @@ public interface PlaylistRepository extends JpaRepository<Playlist, Long> {
     Boolean existsPlaylistByVideoId(String videoId);
 
     Page<Playlist> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+
+    List<Playlist> findByFavoriteTrue();
 }
