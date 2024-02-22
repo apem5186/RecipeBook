@@ -1,5 +1,6 @@
 package com.recipe.recipebook.controller.youtube;
 
+import com.recipe.recipebook.exception.PlaylistNotFoundException;
 import com.recipe.recipebook.dto.EditVideoDTO;
 import com.recipe.recipebook.dto.PlaylistDTO;
 import com.recipe.recipebook.service.PlaylistService;
@@ -13,12 +14,12 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @Slf4j
 @Controller
@@ -40,10 +41,14 @@ public class YoutubeController {
     @Operation(summary = "동영상 수정 요청")
     @PostMapping("/edit/video/{id}")
     public String editVideo(@PathVariable("id") String id, @ModelAttribute("videoDTO") EditVideoDTO editVideoDTO,
-                            BindingResult result, Model model) {
-
-        editVideoDTO.setVideoId(id);
-        playlistService.editVideo(editVideoDTO);
+                            BindingResult result, Model model, RedirectAttributes redirectAttributes) {
+        try {
+            editVideoDTO.setVideoId(id);
+            playlistService.editVideo(editVideoDTO);
+        } catch (PlaylistNotFoundException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "The requested video does not exist.");
+            return "/";
+        }
 
         return "redirect:/detail/" + id;
     }

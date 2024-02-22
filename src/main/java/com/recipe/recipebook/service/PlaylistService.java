@@ -1,15 +1,16 @@
 package com.recipe.recipebook.service;
 
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.api.client.googleapis.json.GoogleJsonResponseException;
 import com.google.api.services.youtube.YouTube;
 import com.google.api.services.youtube.model.PlaylistItem;
 import com.google.api.services.youtube.model.PlaylistItemListResponse;
 import com.google.api.services.youtube.model.Thumbnail;
+import com.recipe.recipebook.exception.*;
 import com.recipe.recipebook.dto.EditVideoDTO;
 import com.recipe.recipebook.dto.OpenAiRequestDTO;
 import com.recipe.recipebook.dto.PlaylistDTO;
@@ -19,12 +20,13 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.*;
 
 import java.io.IOException;
 import java.util.*;
@@ -81,29 +83,46 @@ public class PlaylistService {
 
         List<Playlist> playlists = new ArrayList<>();
         String nextToken = "";
+        try {
+            do {
+                request.setPageToken(nextToken);
+                PlaylistItemListResponse response = request.execute();
+                if (response.isEmpty()) {
+                    log.error("=================================");
+                    log.error("list is empty");
+                    log.error("=================================");
+                    throw new YouTubePlaylistEmptyException("Your YouTube playlist is empty.");
+                }
+                for (PlaylistItem item : response.getItems()) {
+                    String videoId = item.getSnippet().getResourceId().getVideoId();
+                    String title = item.getSnippet().getTitle();
+                    String description = item.getSnippet().getDescription();
+                    Thumbnail highQualityThumbnail = item.getSnippet().getThumbnails().getMaxres();
+                    String thumbnailUrl = highQualityThumbnail != null ? highQualityThumbnail.getUrl() :
+                            item.getSnippet().getThumbnails().getStandard().getUrl();
 
-        do {
-            request.setPageToken(nextToken);
-            PlaylistItemListResponse response = request.execute();
-            if (response.isEmpty()) {
-                log.error("=================================");
-                log.error("list is empty");
-                log.error("=================================");
+                    Playlist playlist = new Playlist(videoId, title, description, thumbnailUrl);
+                    playlists.add(playlist);
+                }
+
+                nextToken = response.getNextPageToken();
+            } while (nextToken != null);
+        } catch (GoogleJsonResponseException e) {
+            if (e.getStatusCode() == 403) {
+                log.error("YouTube API KEY 잘못됨.\nYour YouTube API Key is incorrect.\nDetail : " + e.getDetails());
+                throw new YouTubeAPIKeyIncorrectException("Invalid API request.");
+            } else if (e.getStatusCode() == 404) {
+                log.error("유튜브 플레이리스트 ID 잘못됨.\nYour YouTube playlist ID is wrong\nDetail : " + e.getDetails());
+                throw new YouTubePlaylistIDWrongException("Your YouTube playlist ID is wrong.");
+            } else {
+                log.error("유튜브 API 요청 중에 뭔가 잘못됨.\nSomething is wrong\nDetail : " + e.getDetails());
+                throw new YouTubeAPIRequestException("Error requesting YouTube API.");
             }
-            for (PlaylistItem item : response.getItems()) {
-                String videoId = item.getSnippet().getResourceId().getVideoId();
-                String title = item.getSnippet().getTitle();
-                String description = item.getSnippet().getDescription();
-                Thumbnail highQualityThumbnail = item.getSnippet().getThumbnails().getMaxres();
-                String thumbnailUrl = highQualityThumbnail != null ? highQualityThumbnail.getUrl() :
-                        item.getSnippet().getThumbnails().getStandard().getUrl();
-
-                Playlist playlist = new Playlist(videoId, title, description, thumbnailUrl);
-                playlists.add(playlist);
-            }
-
-            nextToken = response.getNextPageToken();
-        } while (nextToken != null);
+        } catch (IOException e) {
+            log.error("Network error : " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error : " + e.getMessage());
+        }
 
         return playlists;
     }
@@ -123,6 +142,7 @@ public class PlaylistService {
      * Youtube 재생목록을 DTO로 변환 후 반환
      * @return List<PlaylistDTO>
      */
+    @Transactional
     public List<PlaylistDTO> getPlaylist(int page, int pageSize) {
         Pageable pageable = PageRequest.of(page, pageSize);
         List<Playlist> playlists = playlistRepository.findAll(pageable).getContent();
@@ -149,7 +169,8 @@ public class PlaylistService {
      * @return PlaylistDTO
      */
     public PlaylistDTO getVideo(String videoId) {
-        Playlist playlist = playlistRepository.findByVideoId(videoId);
+        Playlist playlist = playlistRepository.findByVideoId(videoId)
+                .orElseThrow(() -> new PlaylistNotFoundException("Video with ID " + videoId + " not found."));
         return new PlaylistDTO(playlist);
     }
 
@@ -159,7 +180,8 @@ public class PlaylistService {
      */
     @Transactional
     public void editVideo(EditVideoDTO editVideoDTO) {
-        Playlist playlist = playlistRepository.findByVideoId(editVideoDTO.getVideoId());
+        Playlist playlist = playlistRepository.findByVideoId(editVideoDTO.getVideoId())
+                .orElseThrow(() -> new PlaylistNotFoundException("Video with ID " + editVideoDTO.getVideoId() + " not found."));
 
         log.info("===================================");
         log.info(playlist.getVideoId());
@@ -179,8 +201,12 @@ public class PlaylistService {
      */
     @Transactional
     public void deleteVideo(String videoId) {
-        log.info("delete video id : " + videoId);
-        playlistRepository.deleteByVideoId(videoId);
+        try {
+            log.info("delete video id : " + videoId);
+            playlistRepository.deleteByVideoId(videoId);
+        } catch (EmptyResultDataAccessException e) {
+            throw new PlaylistNotFoundException("Video with ID " + videoId + " not found.");
+        }
     }
 
     /**
@@ -189,7 +215,8 @@ public class PlaylistService {
      */
     @Transactional
     public void toggleFavorite(String videoId) {
-        Playlist playlist = playlistRepository.findByVideoId(videoId);
+        Playlist playlist = playlistRepository.findByVideoId(videoId)
+                .orElseThrow(() -> new PlaylistNotFoundException("Video with ID " + videoId + " not found."));
         playlist.setFavorite(!playlist.isFavorite());
         playlistRepository.save(playlist);
     }
@@ -256,7 +283,8 @@ public class PlaylistService {
 
     @Transactional
     public String summarizeRecipe(String videoId) {
-        Playlist playlist = playlistRepository.findByVideoId(videoId);
+        Playlist playlist = playlistRepository.findByVideoId(videoId)
+                .orElseThrow(() -> new PlaylistNotFoundException("Video with ID " + videoId + " not found."));
         String description = playlist.getDescription();
 
         HttpHeaders headers = new HttpHeaders();
@@ -288,13 +316,42 @@ public class PlaylistService {
         try {
             body = objectMapper.writeValueAsString(openAIRequest);
         } catch (JsonProcessingException e) {
-            log.error("JsonProcessingException : " + e);
+            log.error("JsonToString 도중 문제 발생\nJsonProcessingException : " + e);
         }
 
         HttpEntity<String> entity = new HttpEntity<>(body, headers);
-
-        ResponseEntity<String> response = restTemplate.postForEntity("https://api.openai.com/v1/chat/completions", entity, String.class);
-
+        ResponseEntity<String> response = null;
+        try {
+            response = restTemplate.postForEntity("https://api.openai.com/v1/chat/completions", entity, String.class);
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                log.error("OpenAI API KEY 안맞음.\nUnauthorized: Incorrect API Key\nDetail : " + e.getMessage());
+                throw new OpenAIAPIKeyIncorrectException("Invalid API request.");
+            } else if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                log.error("ChatGPT 모델 서비스 중인 건지 확인해 봐야 함.\nNot Found: The model might be deprecated\nDetail : " + e.getMessage());
+                throw new ChatGPTModelDeprecatedException("Invalid API request.");
+                // Handle not found error
+            } else {
+                log.error("Client Error: " + e.getStatusCode() + " " + e.getStatusText());
+                // Handle other client-side errors
+                throw new NetworkErrorException((HttpStatus) e.getStatusCode(), "Invalid request.");
+            }
+        } catch (HttpServerErrorException e) {
+            log.error("Server Error: " + e.getStatusCode() + " " + e.getStatusText());
+            throw new NetworkErrorException((HttpStatus) e.getStatusCode(), "An error occurred. Please try again later.");
+            // Handle server-side errors
+        } catch (ResourceAccessException e) {
+            // like connection timeout
+            log.error("timeout 에러일 가능성이 높음\nResource access exception : " + e.getMessage());
+            throw new NetworkErrorException(HttpStatus.GATEWAY_TIMEOUT, "Request timeout.");
+        } catch (RestClientException e) {
+            log.error("HTTP 요청 수행 중 문제 발생\nRestClientException : " + e);
+            throw new NetworkErrorException(HttpStatus.BAD_GATEWAY, "An error occurred while processing your request. Please try again later.");
+        }
+        if (response == null) {
+            log.error("response is null");
+            throw new NetworkErrorException(HttpStatus.NO_CONTENT, "An error occurred while processing your request. Please try again later.");
+        }
         log.info("Extracted Text : \n " + response.getBody());
         try {
             JsonNode rootNode = objectMapper.readTree(response.getBody());
@@ -305,7 +362,7 @@ public class PlaylistService {
 
             playlistRepository.save(playlist);
         } catch (JsonProcessingException e) {
-            log.error("JsonProcessingException : " + e);
+            log.error("응답 body를 JsonNode로 파싱하는 중 오류 발생\nJsonProcessingException : " + e);
         }
 
         return response.getBody();

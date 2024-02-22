@@ -1,11 +1,10 @@
 package com.recipe.recipebook.controller;
 
+import com.recipe.recipebook.exception.PlaylistNotFoundException;
 import com.recipe.recipebook.dto.EditVideoDTO;
 import com.recipe.recipebook.dto.PlaylistDTO;
 import com.recipe.recipebook.service.PlaylistService;
 import io.swagger.v3.oas.annotations.Operation;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -14,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,8 +49,8 @@ public class HomeController {
     @GetMapping("/detail/{id}")
     public String detail(@PathVariable(name = "id") String id, Model model) {
         PlaylistDTO playlistDTO = playlistService.getVideo(id);
-
         model.addAttribute("item", playlistDTO);
+
         return "detail";
     }
 
@@ -64,6 +64,7 @@ public class HomeController {
 
         model.addAttribute("item", playlistDTO);
         model.addAttribute("videoDTO", editVideoDTO);
+
         return "edit";
     }
 }
