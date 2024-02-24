@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -41,13 +40,13 @@ public class YoutubeController {
     @Operation(summary = "동영상 수정 요청")
     @PostMapping("/edit/video/{id}")
     public String editVideo(@PathVariable("id") String id, @ModelAttribute("videoDTO") EditVideoDTO editVideoDTO,
-                            BindingResult result, Model model, RedirectAttributes redirectAttributes) {
+                            RedirectAttributes redirectAttributes) {
         try {
             editVideoDTO.setVideoId(id);
             playlistService.editVideo(editVideoDTO);
         } catch (PlaylistNotFoundException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "The requested video does not exist.");
-            return "/";
+            return "home";
         }
 
         return "redirect:/detail/" + id;

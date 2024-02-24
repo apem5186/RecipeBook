@@ -1,57 +1,56 @@
 package com.recipe.recipebook.controller;
 
+import com.recipe.recipebook.entity.ErrorResponse;
 import com.recipe.recipebook.exception.*;
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.servlet.ModelAndView;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(PlaylistNotFoundException.class)
-    public String handlePlaylistNotFoundException(PlaylistNotFoundException ex, RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-        return "redirect:/";
+    public ModelAndView handlePlaylistNotFoundException(PlaylistNotFoundException ex) {
+        ModelAndView modelAndView = new ModelAndView("errorPage");
+        modelAndView.addObject("errorMessage", ex.getMessage());
+        return modelAndView;
     }
 
-    @ExceptionHandler(YouTubePlaylistEmptyException.class)
-    public String handleYoutubePlaylistIsEmpty(YouTubePlaylistEmptyException ex, RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-        return "redirect:/";
-    }
+//    @ExceptionHandler(YouTubePlaylistEmptyException.class)
+//    public String handleYoutubePlaylistIsEmpty(YouTubePlaylistEmptyException ex, Model model) {
+//        model.addAttribute("errorMessage", ex.getMessage());
+//        return "redirect:/";
+//    }
 
     @ExceptionHandler(NetworkErrorException.class)
-    public String handleNetworkError(NetworkErrorException ex, RedirectAttributes redirectAttributes,
-                                     HttpServletRequest request) {
-        redirectAttributes.addFlashAttribute("errorMessage", "An unexpected error occurred. Please try again later.");
-        redirectAttributes.addFlashAttribute("ErrorStatus", ex.getStatus());
+    @ResponseBody
+    public ResponseEntity<ErrorResponse> handleNetworkError(NetworkErrorException ex) {
 
-        String referrer = request.getHeader("Referer");
-
-        // URL에 직접 액세스 했을 때 "/", 아니면 그 페이지에 남음
-        return "redirect:" + (referrer != null ? referrer : "/");
+        return new ErrorResponse("An unexpected error occurred. Please try again later.", ex.getStatus()).toResponseEntity();
     }
 
     @ExceptionHandler(YouTubeAPIKeyIncorrectException.class)
-    public String handleYoutubeAPIKeyWrong(YouTubeAPIKeyIncorrectException ex, RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-        // 메인 페이지로 또 가면 무한 루프 빠질 수 있으므로 에러 페이지 생성 후 보내야 함
-        // TODO : error 페이지 만들기
-        return "";
+    public ModelAndView handleYoutubeAPIKeyWrong(YouTubeAPIKeyIncorrectException ex) {
+        ModelAndView modelAndView = new ModelAndView("errorPage");
+        modelAndView.addObject("errorMessage", ex.getMessage());
+        return modelAndView;
     }
 
     @ExceptionHandler(YouTubePlaylistIDWrongException.class)
-    public String handleYoutubePlaylistIdWrong(YouTubePlaylistIDWrongException ex, RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-        // TODO : 에러 페이지 만들기
-        return "";
+    public ModelAndView handleYoutubePlaylistIdWrong(YouTubePlaylistIDWrongException ex) {
+        ModelAndView modelAndView = new ModelAndView("errorPage");
+        modelAndView.addObject("errorMessage", ex.getMessage());
+        return modelAndView;
     }
 
     @ExceptionHandler(YouTubeAPIRequestException.class)
-    public String handleYoutubeAPIRequestException(YouTubeAPIRequestException ex, RedirectAttributes redirectAttributes) {
-        redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
-        // TODO : 에러 페이지 만들기
-        return "";
+    public ModelAndView handleYoutubeAPIRequestException(YouTubeAPIRequestException ex) {
+        ModelAndView modelAndView = new ModelAndView("errorPage");
+        modelAndView.addObject("errorMessage", ex.getMessage());
+        return modelAndView;
     }
 }

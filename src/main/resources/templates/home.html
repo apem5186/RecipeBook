@@ -201,8 +201,17 @@
         </div>
     </div>
 
+    <div th:if="${errorMessage}" class="toast" role="alert">
+        <div class="toast-header">
+            <strong class="mr-auto">Error</strong>
+            <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">&times;</button>
+        </div>
+        <div class="toast-body" th:text="${errorMessage}"></div>
+    </div>
 </div>
+
 <script>
+
     document.addEventListener('DOMContentLoaded', (event) => {
         if (sessionStorage.getItem('refresh')) {
             // detail.html 에서 즐겨찾기 후 뒤로가기 눌렀을 때

@@ -1,0 +1,19 @@
+<div th:fragment="toastFragment" id="toastContainer" aria-live="polite" aria-atomic="true" class="d-flex justify-content-center align-items-center w-100">
+        <div id="toast" class="toast" role="alert" data-bs-autohide="false" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Error</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button> <!-- 닫기 버튼 -->
+            </div>
+            <h4 class="toast-body" id="errorMessage"></h4>
+            <div class="m-1 p-1 border-top d-flex align-items-center justify-content-end"> <!-- 오른쪽 정렬 -->
+                <div class="col-auto me-1">
+                    <a href="/" type="button" class="btn btn-secondary btn-sm">home</a>
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">Close</button>
+                </div>
+            </div>
+        </div>
+</div>
+
+

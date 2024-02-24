@@ -1,8 +1,8 @@
 package com.recipe.recipebook.controller;
 
-import com.recipe.recipebook.exception.PlaylistNotFoundException;
 import com.recipe.recipebook.dto.EditVideoDTO;
 import com.recipe.recipebook.dto.PlaylistDTO;
+import com.recipe.recipebook.exception.PlaylistNotFoundException;
 import com.recipe.recipebook.service.PlaylistService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -91,7 +91,7 @@ public class PlaylistService {
                     log.error("=================================");
                     log.error("list is empty");
                     log.error("=================================");
-                    throw new YouTubePlaylistEmptyException("Your YouTube playlist is empty.");
+                    // throw new YouTubePlaylistEmptyException("Your YouTube playlist is empty.");
                 }
                 for (PlaylistItem item : response.getItems()) {
                     String videoId = item.getSnippet().getResourceId().getVideoId();
@@ -108,8 +108,8 @@ public class PlaylistService {
                 nextToken = response.getNextPageToken();
             } while (nextToken != null);
         } catch (GoogleJsonResponseException e) {
-            if (e.getStatusCode() == 403) {
-                log.error("YouTube API KEY 잘못됨.\nYour YouTube API Key is incorrect.\nDetail : " + e.getDetails());
+            if (e.getStatusCode() == 400) {
+                log.error("YouTube API KEY가 잘못 됐을 확률이 높음.\nYour YouTube API Key maybe incorrect.\nDetail : " + e.getDetails());
                 throw new YouTubeAPIKeyIncorrectException("Invalid API request.");
             } else if (e.getStatusCode() == 404) {
                 log.error("유튜브 플레이리스트 ID 잘못됨.\nYour YouTube playlist ID is wrong\nDetail : " + e.getDetails());
@@ -203,6 +203,7 @@ public class PlaylistService {
     public void deleteVideo(String videoId) {
         try {
             log.info("delete video id : " + videoId);
+            playlistRepository.findByVideoId(videoId).orElseThrow(() -> new PlaylistNotFoundException("This video is not exist."));
             playlistRepository.deleteByVideoId(videoId);
         } catch (EmptyResultDataAccessException e) {
             throw new PlaylistNotFoundException("Video with ID " + videoId + " not found.");
@@ -281,6 +282,11 @@ public class PlaylistService {
         }
     }
 
+    /**
+     * ChatGPT를 이용해서 유튜브 영상의 설명글을 요약함
+     * @param videoId
+     * @return String response.getBody()
+     */
     @Transactional
     public String summarizeRecipe(String videoId) {
         Playlist playlist = playlistRepository.findByVideoId(videoId)
@@ -320,35 +326,20 @@ public class PlaylistService {
         }
 
         HttpEntity<String> entity = new HttpEntity<>(body, headers);
-        ResponseEntity<String> response = null;
+        ResponseEntity<String> response;
         try {
             response = restTemplate.postForEntity("https://api.openai.com/v1/chat/completions", entity, String.class);
-        } catch (HttpClientErrorException e) {
-            if (e.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                log.error("OpenAI API KEY 안맞음.\nUnauthorized: Incorrect API Key\nDetail : " + e.getMessage());
-                throw new OpenAIAPIKeyIncorrectException("Invalid API request.");
-            } else if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-                log.error("ChatGPT 모델 서비스 중인 건지 확인해 봐야 함.\nNot Found: The model might be deprecated\nDetail : " + e.getMessage());
-                throw new ChatGPTModelDeprecatedException("Invalid API request.");
-                // Handle not found error
-            } else {
-                log.error("Client Error: " + e.getStatusCode() + " " + e.getStatusText());
-                // Handle other client-side errors
-                throw new NetworkErrorException((HttpStatus) e.getStatusCode(), "Invalid request.");
-            }
-        } catch (HttpServerErrorException e) {
-            log.error("Server Error: " + e.getStatusCode() + " " + e.getStatusText());
-            throw new NetworkErrorException((HttpStatus) e.getStatusCode(), "An error occurred. Please try again later.");
-            // Handle server-side errors
+        } catch (RestClientResponseException e) {
+            log.error("OpenAI의 API Key값이 잘 못 됐을 확률이 큼\nHTTP Response error: " + e.getStatusCode() + " " + e.getStatusText());
+            throw new NetworkErrorException((HttpStatus) e.getStatusCode(), "HTTP response error: " + e.getStatusText());
         } catch (ResourceAccessException e) {
-            // like connection timeout
-            log.error("timeout 에러일 가능성이 높음\nResource access exception : " + e.getMessage());
+            log.error("Resource access exception: " + e.getMessage());
             throw new NetworkErrorException(HttpStatus.GATEWAY_TIMEOUT, "Request timeout.");
         } catch (RestClientException e) {
-            log.error("HTTP 요청 수행 중 문제 발생\nRestClientException : " + e);
+            log.error("RestClientException: " + e.getMessage());
             throw new NetworkErrorException(HttpStatus.BAD_GATEWAY, "An error occurred while processing your request. Please try again later.");
         }
-        if (response == null) {
+        if (response.getHeaders().isEmpty()) {
             log.error("response is null");
             throw new NetworkErrorException(HttpStatus.NO_CONTENT, "An error occurred while processing your request. Please try again later.");
         }
