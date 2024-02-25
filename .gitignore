@@ -6,10 +6,8 @@ build/
 !**/src/test/**/build/
 
 ### YML ###
-application-dev.yml
-application-dev2.yml
-### 이건 배포 할 때는 빼야 함
-application.yml
+**/src/main/resources/application-dev.yml
+**/src/main/resources/application-dev2.yml
 ### STS ###
 .apt_generated
 .classpath
