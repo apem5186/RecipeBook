@@ -1,30 +1,447 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Title</title>
+    <title>Recipe Book</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .search-form {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            border: 2px solid #d1d1d1;
+            border-radius: 10px 0 0 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #a0a0a0;
+        }
+
+        .search-button {
+            padding: 10px 20px;
+            border: 2px solid #4CAF50;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 0 10px 10px 0;
+            transition: background-color 0.3s, border-color 0.3s;
+            outline: none;
+        }
+
+        .search-button:hover,
+        .search-button:focus {
+            background-color: #45a049;
+            border-color: #45a049;
+        }
+
+        .favorites-section h3 {
+            color: #f0ad4e; /* Gold color for favorites heading */
+        }
+
+        .favorite-card {
+            border: 2px solid #f0ad4e; /* Gold border for favorite cards */
+        }
+
+        .favorite-icon {
+            color: #f0ad4e; /* Gold color for the filled star */
+            font-size: 1.5em;
+            top: 0.5em;
+            right: 0.5em;
+        }
+
+        /* Optional: Add some box-shadow to the form for depth */
+        /*.search-form {*/
+        /*    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);*/
+        /*}*/
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .card-img-top {
+            border-radius: 10px 10px 0 0;
+            height: 200px;
+            object-fit: cover;
+        }
+        .card:hover {
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+        .card-body {
+            padding: 15px;
+        }
+        .card-title {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        .card-text {
+            color: #555;
+            font-size: 1rem;
+        }
+        .image-container {
+            position: relative;
+        }
+        .refresh-icon {
+            font-size: 30px;
+        }
+        .delete-icon {
+            font-size: 1.3em; /* Size of the icon */
+            color: #dc3545; /* Color of the icon */
+            top: 0.25em; /* Distance from the top edge */
+            right: 0.25em; /* Distance from the right edge */
+            padding: 0.25em; /* Space around the icon */
+        }
+
+        .bi-x-circle-fill {
+            /* Icon styling */
+            color: inherit; /* Inherits the color from .delete-icon */
+            border-radius: 50%; /* Optional: rounded circle around the icon */
+            padding: 0.25em; /* Padding inside the circle */
+        }
+        .delete-icon.hidden {
+            display: none;
+        }
+        /* Make sure to include the Bootstrap Icons stylesheet */
+        .custom-switch .form-check-input {
+            width: 4em !important; /* Increase the width of the switch */
+            height: 2em !important; /* Adjust the height to maintain aspect ratio */
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+
+        .custom-switch .form-check-input:checked {
+            background-color: #198754 !important; /* Bootstrap green color */
+            border-color: #198754 !important; /* Bootstrap green color */
+        }
+
+        .custom-switch .form-check-input:checked::after {
+            transform: translateX(1.5em) !important; /* Adjust this value based on the width of the switch */
+        }
+        .search-bar {
+            margin: 20px 0;
+        }
+    </style>
 </head>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-    .container {
-        padding: 20px;
-        width: 100%;
-    }
-</style>
 <body>
-<div class="container">
-    <h1>Hello World!</h1>
-    <p>Test, ㄱㄴ가나, 1, @$%@$ㅆ@$ㅆa43a</p>
-    <span th:text="${Test}"></span>
-    <span th:text="${Number}"></span>
+
+<div class="container mt-3">
+    <h2>Recipe Book</h2>
+
+    <form action="/search" method="get" class="search-form">
+        <input type="text" name="query" placeholder="Search..." class="search-input"/>
+        <button type="submit" class="search-button">Search</button>
+    </form>
+
+
+
+    <!-- Favorites Section -->
+    <div th:unless="${#lists.isEmpty(favorites)}" class="favorites-section mb-4">
+        <h3 class="mb-3">★ Favorite Recipes</h3>
+        <div class="row">
+            <div class="col-md-4" th:each="favorite : ${favorites}" th:if="${favorite.favorite}">
+                <a th:href="@{'/detail/' + ${favorite.videoId}}" class="card-link" style="text-decoration: none;">
+                    <div class="card favorite-card">
+                        <div class="image-container position-relative">
+                            <img th:src="@{${favorite.thumbnailUrl}}" class="card-img-top" alt="Recipe Image">
+                            <!-- Favorite icon -->
+                            <i class="bi bi-star-fill favorite-icon position-absolute top-0 end-0"></i>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${favorite.title}">Favorite Recipe Title</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    <hr/>
+    </div>
+    <div class="d-flex justify-content-end custom-switch align-items-center">
+        <button id="initializeButton" class="btn btn-danger p-2 me-2 mb-1" type="button">초기화</button>
+        <button id="refreshButton" class="btn btn-link p-0 me-2 refresh-icon" type="button">
+            <i class="bi bi-arrow-clockwise"></i>
+        </button>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="toggleIconSwitch" checked
+                   title="삭제기능 on/off" data-bs-toggle="tooltip">
+            <label class="form-check-label" for="toggleIconSwitch"></label>
+        </div>
+    </div>
+    <div class="row playlist">
+        <div class="col-md-4" th:each="item : ${items}" th:id="'video-' + ${item.videoId}">
+            <a th:href="@{'/detail/' + ${item.videoId}}" class="card-link">
+                <div class="card">
+                    <!-- Image container with relative positioning -->
+                    <div class="image-container position-relative">
+                        <img th:src="@{${item.thumbnailUrl}}" class="card-img-top" alt="Recipe Image">
+                        <!-- Absolutely positioned 'x' icon inside the container -->
+                        <a href="#" class="delete-icon position-absolute top-0 end-0" th:data-video-id="${item.videoId}">
+                            <span class="delete-icon position-absolute top-0 end-0 bi bi-x-circle-fill hidden"></span>
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title" th:text="${item.title}">Recipe Title</h5>
+                        <!-- Description is commented out -->
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div th:if="${errorMessage}" class="toast" role="alert">
+        <div class="toast-header">
+            <strong class="mr-auto">Error</strong>
+            <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">&times;</button>
+        </div>
+        <div class="toast-body" th:text="${errorMessage}"></div>
+    </div>
 </div>
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', (event) => {
+        if (sessionStorage.getItem('refresh')) {
+            // detail.html 에서 즐겨찾기 후 뒤로가기 눌렀을 때
+            sessionStorage.removeItem('refresh');
+            location.reload();
+        }
+        const params = new URLSearchParams(window.location.search);
+        let currentPage = parseInt(params.get('page')) || 0;
+        const pageSize = window.innerWidth <= 768 ? 10 : 5; // 모바일은 10, PC는 30
+        let isFetching = false; // 현재 데이터를 가져오고 있는지 상태를 표시
+        let isEndOfData = false; // 데이터가 더 이상 없는지 상태를 표시
+
+        window.addEventListener('scroll', () => {
+            const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+            if (scrollTop + clientHeight >= scrollHeight - 5 && !isFetching && !isEndOfData) { // 스크롤이 페이지 하단에 거의 도달했는지 확인
+                currentPage++;
+                fetchAndAppendPlaylists(currentPage); // 추가 데이터 요청
+            }
+        });
+
+        function fetchAndAppendPlaylists(page) {
+            isFetching = true;
+
+            // 'query' parameter가 url에 있는지
+            const params = new URLSearchParams(window.location.search);
+            const queryParamExists = params.has('query');
+            const queryParamValue = queryParamExists ? params.get('query') : '';
+
+            // queryParamExists 유무에 따라 fetchUrl이 바뀜
+            const fetchUrl = queryParamExists
+                ? `/search/fragment?query=${encodeURIComponent(queryParamValue)}&page=${page}`
+                : `/playlists/fragment?page=${page}`;
+
+            fetch(fetchUrl)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newItems = doc.querySelectorAll('.col-md-4');
+
+                    if (newItems.length === 0) {
+                        isEndOfData = true;
+                    } else {
+                        const container = document.querySelector('.playlist');
+                        newItems.forEach(item => container.appendChild(item.cloneNode(true)));
+
+                        // queryParamExists 유무에 따라 pushState에 넣는 url이 달라짐
+                        const newUrl = queryParamExists ? `/search?query=${encodeURIComponent(queryParamValue)}&page=${page}` : `/?page=${page}`;
+                        history.pushState({ page: page }, '', newUrl);
+                        sessionStorage.setItem('currentPage', page.toString());
+                        getDeleteIcons();
+                        if (newItems.length < pageSize)
+                            isEndOfData = true;
+                    }
+                    isFetching = false;
+                }).catch(error => {
+                    console.error('Error fetching playlists:', error);
+                    isFetching = false;
+            });
+        }
+        window.addEventListener('popstate', event => {
+            if (event.state && event.state.page !== undefined) {
+                currentPage = event.state.page;
+            }
+        })
+
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        const initializeButton = document.getElementById('initializeButton');
+        const refreshButton = document.getElementById('refreshButton');
+
+        initializeButton.addEventListener('click', function() {
+            // Display a confirmation dialog
+            if (confirm('정말로 초기화하시겠습니까?')) {
+                // Proceed with the fetch request if the user confirmed
+                fetch('/initialize/video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // 필요한 경우 CSRF 토큰 포함
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            // If the server response is not OK, throw an error
+                            throw new Error('서버에 문제가 발생했습니다!');
+                        }
+                        return response.json(); // Parse the response as JSON
+                    })
+                    .then(data => {
+                        alert(data.message); // Alert the user with the message from the response
+                        window.location.reload(); // Reload the page after successful reset
+                    })
+                    .catch(error => {
+                        console.error('재생 목록 초기화 중 오류 발생:', error); // Log any errors to the console
+                    });
+            } else {
+                // If the user cancels, you might want to do something here or simply do nothing
+                console.log('초기화가 취소되었습니다.');
+            }
+        });
+
+        refreshButton.addEventListener('click', function() {
+            // Display a confirmation dialog
+            if (confirm('새로고침하시겠습니까?')) {
+                // Proceed with the fetch request if the user confirmed
+                fetch('/refresh/video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // 필요한 경우 CSRF 토큰 포함
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            // If the server response is not OK, throw an error
+                            throw new Error('서버에 문제가 발생했습니다!');
+                        }
+                        return response.json(); // Parse the response as JSON
+                    })
+                    .then(data => {
+                        alert(data.message); // Alert the user with the message from the response
+                        window.location.reload(); // Reload the page after successful refresh
+                    })
+                    .catch(error => {
+                        console.error('재생목록 새로고침 중 오류 발생:', error); // Log any errors to the console
+                    });
+            } else {
+                // If the user cancels, you might want to do something here or simply do nothing
+                console.log('새로고침이 취소되었습니다.');
+            }
+        });
+
+        document.querySelectorAll('a.delete-icon').forEach(function (element) {
+            element.addEventListener('click', function (event) {
+                // Prevent the default anchor behavior and stop event propagation
+                event.preventDefault();
+                event.stopPropagation(); // Add this line
+                const videoId = this.getAttribute('data-video-id');
+                deleteVideo(event, videoId);
+            });
+        });
+
+        // Get the switch and the delete icons
+        const storedState = localStorage.getItem('switchState');
+        const toggle = document.getElementById('toggleIconSwitch');
+        let deleteIcons = document.querySelectorAll('.delete-icon');
+
+        // 무한 스크롤로 데이터 더 가져올 시, delete-icon 다시 가져와야 함
+        function getDeleteIcons() {
+            deleteIcons = document.querySelectorAll('.delete-icon');
+
+            document.querySelectorAll('a.delete-icon').forEach(function (element) {
+                element.addEventListener('click', function (event) {
+                    // Prevent the default anchor behavior and stop event propagation
+                    event.preventDefault();
+                    event.stopPropagation(); // Add this line
+                    const videoId = this.getAttribute('data-video-id');
+                    deleteVideo(event, videoId);
+                });
+            });
+        }
+
+        if (storedState === 'on') {
+            toggle.checked = true;
+            deleteIcons.forEach(icon => icon.classList.remove('hidden'));
+        } else {
+            toggle.checked = false;
+            deleteIcons.forEach(icon => icon.classList.add('hidden'));
+        }
+
+        // Define the toggle function
+        function toggleIcons() {
+            deleteIcons.forEach(icon => {
+                if (toggle.checked) {
+                    icon.classList.remove('hidden');
+                    localStorage.setItem('switchState', 'on');
+                } else {
+                    icon.classList.add('hidden');
+                    localStorage.setItem('switchState', 'off');
+                }
+            });
+        }
+
+        // Attach the event listener to the switch
+        toggle.addEventListener('change', toggleIcons);
+
+        // Call the function on page load to set the initial state
+        toggleIcons();
+    });
+
+    function deleteVideo(event, videoId) {
+        event.preventDefault(); // Prevent the default anchor behavior
+
+        if (confirm('Are you sure you want to delete this video?')) {
+            fetch('/delete/video/' + videoId, {
+                method: 'DELETE',
+                // Add any needed headers, credentials, etc.
+                headers: {
+                    'Content-Type': 'application/json',
+                    // If you're using CSRF protection, you'll need to include your CSRF token here
+                },
+                // If you need credentials such as cookies, include them in the request
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    // Assume response is OK; proceed to remove the item from the DOM
+                    const itemElement = document.getElementById('video-' + videoId);
+                    if (itemElement) {
+                        itemElement.remove(); // Remove the item's container from the DOM
+                    }
+                    return response.json(); // or response.text() if your server sends a non-JSON response
+                })
+                .then(data => {
+                    console.log(data);
+                    // Here you can handle redirection after deletion,
+                    // Or remove the element from the DOM to reflect the change immediately.
+                })
+                .catch(error => {
+                    console.error('There was an error deleting the video:', error);
+                });
+        }
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
 </body>
 </html>

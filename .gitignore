@@ -7,7 +7,9 @@ build/
 
 ### YML ###
 application-dev.yml
-
+application-dev2.yml
+### 이건 배포 할 때는 빼야 함
+application.yml
 ### STS ###
 .apt_generated
 .classpath
