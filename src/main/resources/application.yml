@@ -15,3 +15,14 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+
+youtube:
+  api:
+    key: ${YOUTUBE_API_KEY}
+    playlist-id: ${YOUTUBE_PLAYLIST_ID}
+    application-name: ${APPLICATION_NAME}
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
+    model: ${OPENAI_API_MODEL}
