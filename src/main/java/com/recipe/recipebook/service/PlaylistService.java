@@ -254,7 +254,6 @@ public class PlaylistService {
     @Transactional
     public void initialization() throws IOException {
         if (playlistRepository.count() > 0) {
-            log.info("실행됨");
             playlistRepository.deleteAll();
             entityManager.flush();
             entityManager.clear();
