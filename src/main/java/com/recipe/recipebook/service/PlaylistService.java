@@ -144,9 +144,20 @@ public class PlaylistService {
      */
     @Transactional
     public List<PlaylistDTO> getPlaylist(int page, int pageSize) {
+        long totalPlaylists = playlistRepository.count();
+        int totalPages = (int) Math.ceil((double) totalPlaylists / pageSize);
+
+            // page는 0부터 시작함 totalPages == page 이면 페이지 수 초과
+        if (page < 0 || (page == totalPages && page != 0)) {
+            log.error("totalPages = " + totalPages + " and page = " + page);
+            log.error("totalPlaylists = " + totalPlaylists);
+            throw new OutOfPageRangeException("Out of page range.");
+        }
         Pageable pageable = PageRequest.of(page, pageSize);
         List<Playlist> playlists = playlistRepository.findAll(pageable).getContent();
-        if (playlists.isEmpty()) {
+        log.info("page : " + page);
+        log.info("totalPages : " + totalPages);
+        if (playlists.isEmpty() && page == 0) {
             log.info("==============================");
             log.info("Playlist is Empty, fetching from YouTube...");
             log.info("==============================");
@@ -434,7 +445,7 @@ public class PlaylistService {
     }
 
     /**
-     * Mobile은 10 PC는 30, pageSize를 결정함
+     * Mobile은 10 PC는 20, pageSize를 결정함
      * @param userAgent Mobile로 접속한 건지 PC로 접속한 건지
      * @return pageSize
      */
@@ -442,7 +453,7 @@ public class PlaylistService {
         if (userAgent != null && userAgent.contains("Mobi")) {
             return 10;
         } else {
-            return 5;
+            return 3;
         }
     }
 }

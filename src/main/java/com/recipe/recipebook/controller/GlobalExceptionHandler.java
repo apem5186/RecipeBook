@@ -20,6 +20,12 @@ public class GlobalExceptionHandler {
         return modelAndView;
     }
 
+    @ExceptionHandler(OutOfPageRangeException.class)
+    @ResponseBody
+    public ResponseEntity<String> handleOutOfPageRangeException(OutOfPageRangeException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
 //    @ExceptionHandler(YouTubePlaylistEmptyException.class)
 //    public String handleYoutubePlaylistIsEmpty(YouTubePlaylistEmptyException ex, Model model) {
 //        model.addAttribute("errorMessage", ex.getMessage());
