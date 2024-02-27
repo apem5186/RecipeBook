@@ -6,8 +6,8 @@ build/
 !**/src/test/**/build/
 
 ### YML ###
-**/src/main/resources/application-dev.yml
-**/src/main/resources/application-dev2.yml
+!**/src/main/resources/application-dev.yml
+!**/src/main/resources/application-dev2.yml
 ### STS ###
 .apt_generated
 .classpath
