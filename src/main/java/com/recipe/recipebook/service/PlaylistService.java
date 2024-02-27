@@ -91,7 +91,6 @@ public class PlaylistService {
                     log.error("=================================");
                     log.error("list is empty");
                     log.error("=================================");
-                    // throw new YouTubePlaylistEmptyException("Your YouTube playlist is empty.");
                 }
                 for (PlaylistItem item : response.getItems()) {
                     String videoId = item.getSnippet().getResourceId().getVideoId();
@@ -144,9 +143,18 @@ public class PlaylistService {
      */
     @Transactional
     public List<PlaylistDTO> getPlaylist(int page, int pageSize) {
+        long totalPlaylists = playlistRepository.count();
+        int totalPages = (int) Math.ceil((double) totalPlaylists / pageSize);
+
+            // page는 0부터 시작함 totalPages == page 이면 페이지 수 초과
+        if (page < 0 || (page == totalPages && page != 0)) {
+            log.error("totalPages = " + totalPages + " and page = " + page);
+            log.error("totalPlaylists = " + totalPlaylists);
+            throw new OutOfPageRangeException("Out of page range.");
+        }
         Pageable pageable = PageRequest.of(page, pageSize);
         List<Playlist> playlists = playlistRepository.findAll(pageable).getContent();
-        if (playlists.isEmpty()) {
+        if (playlists.isEmpty() && page == 0) {
             log.info("==============================");
             log.info("Playlist is Empty, fetching from YouTube...");
             log.info("==============================");
@@ -182,12 +190,6 @@ public class PlaylistService {
     public void editVideo(EditVideoDTO editVideoDTO) {
         Playlist playlist = playlistRepository.findByVideoId(editVideoDTO.getVideoId())
                 .orElseThrow(() -> new PlaylistNotFoundException("Video with ID " + editVideoDTO.getVideoId() + " not found."));
-
-        log.info("===================================");
-        log.info(playlist.getVideoId());
-        log.info(editVideoDTO.getTitle());
-        log.info(editVideoDTO.getVideoId());
-        log.info("===================================");
 
         playlist.setTitle(editVideoDTO.getTitle());
         playlist.setDescription(editVideoDTO.getDescription());
@@ -236,9 +238,9 @@ public class PlaylistService {
 
     /**
      * title를 받아서 Playlist를 검색함
-     * @param title
-     * @param page
-     * @param pageSize
+     * @param title 영상 제목
+     * @param page default 0
+     * @param pageSize mobile 5 PC 9
      * @return List<PlaylistDTO>
      */
     public List<PlaylistDTO> searchByTitle(String title, int page, int pageSize) {
@@ -434,15 +436,15 @@ public class PlaylistService {
     }
 
     /**
-     * Mobile은 10 PC는 30, pageSize를 결정함
+     * Mobile은 5 PC는 9, pageSize를 결정함
      * @param userAgent Mobile로 접속한 건지 PC로 접속한 건지
      * @return pageSize
      */
     public int determinePageSize(String userAgent) {
         if (userAgent != null && userAgent.contains("Mobi")) {
-            return 10;
-        } else {
             return 5;
+        } else {
+            return 9;
         }
     }
 }

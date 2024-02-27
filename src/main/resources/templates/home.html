@@ -134,6 +134,14 @@
         .search-bar {
             margin: 20px 0;
         }
+        .page-down:hover {
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+        .page-down:active {
+            transform: translateY(2px);
+            transition: transform 0.1s ease;
+        }
     </style>
 </head>
 <body>
@@ -200,7 +208,9 @@
             </a>
         </div>
     </div>
-
+    <button class="btn d-flex justify-content-center mx-auto border-0 bg-transparent page-down">
+        <i class="bi bi-arrow-down-circle" style="font-size: 1.5em;"></i>
+    </button>
     <div th:if="${errorMessage}" class="toast" role="alert">
         <div class="toast-header">
             <strong class="mr-auto">Error</strong>
@@ -220,9 +230,15 @@
         }
         const params = new URLSearchParams(window.location.search);
         let currentPage = parseInt(params.get('page')) || 0;
-        const pageSize = window.innerWidth <= 768 ? 10 : 5; // 모바일은 10, PC는 30
+        const pageSize = window.innerWidth <= 768 ? 5 : 9 // 모바일은 5, PC는 9
         let isFetching = false; // 현재 데이터를 가져오고 있는지 상태를 표시
         let isEndOfData = false; // 데이터가 더 이상 없는지 상태를 표시
+        const pageDown = document.querySelector('.page-down');
+
+        pageDown.addEventListener('click', function () {
+            currentPage++;
+            fetchAndAppendPlaylists(currentPage);
+        });
 
         window.addEventListener('scroll', () => {
             const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
@@ -244,9 +260,13 @@
             const fetchUrl = queryParamExists
                 ? `/search/fragment?query=${encodeURIComponent(queryParamValue)}&page=${page}`
                 : `/playlists/fragment?page=${page}`;
-
             fetch(fetchUrl)
-                .then(response => response.text())
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => Promise.reject(text));
+                    }
+                    return response.text();
+                })
                 .then(html => {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
@@ -254,22 +274,27 @@
 
                     if (newItems.length === 0) {
                         isEndOfData = true;
+                        pageDown.disabled = true;
                     } else {
                         const container = document.querySelector('.playlist');
                         newItems.forEach(item => container.appendChild(item.cloneNode(true)));
-
                         // queryParamExists 유무에 따라 pushState에 넣는 url이 달라짐
                         const newUrl = queryParamExists ? `/search?query=${encodeURIComponent(queryParamValue)}&page=${page}` : `/?page=${page}`;
                         history.pushState({ page: page }, '', newUrl);
                         sessionStorage.setItem('currentPage', page.toString());
                         getDeleteIcons();
-                        if (newItems.length < pageSize)
+                        if (newItems.length < pageSize) {
                             isEndOfData = true;
+                            pageDown.disabled = true;
+                            console.log("isEndOfData : " + isEndOfData);
+                        }
                     }
                     isFetching = false;
                 }).catch(error => {
                     console.error('Error fetching playlists:', error);
                     isFetching = false;
+                    currentPage--;
+                    alert(error);
             });
         }
         window.addEventListener('popstate', event => {
