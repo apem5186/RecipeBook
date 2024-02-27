@@ -230,7 +230,7 @@
         }
         const params = new URLSearchParams(window.location.search);
         let currentPage = parseInt(params.get('page')) || 0;
-        const pageSize = window.innerWidth <= 768 ? 10 : 3 // 모바일은 10, PC는 20
+        const pageSize = window.innerWidth <= 768 ? 5 : 9 // 모바일은 5, PC는 9
         let isFetching = false; // 현재 데이터를 가져오고 있는지 상태를 표시
         let isEndOfData = false; // 데이터가 더 이상 없는지 상태를 표시
         const pageDown = document.querySelector('.page-down');
@@ -263,7 +263,7 @@
             fetch(fetchUrl)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error("Network response was not ok.");
+                        return response.text().then(text => Promise.reject(text));
                     }
                     return response.text();
                 })
@@ -291,10 +291,10 @@
                     }
                     isFetching = false;
                 }).catch(error => {
-                    console.error('Error fetching playlists:', error.message);
+                    console.error('Error fetching playlists:', error);
                     isFetching = false;
                     currentPage--;
-                    alert(error.message);
+                    alert(error);
             });
         }
         window.addEventListener('popstate', event => {

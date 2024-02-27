@@ -247,9 +247,9 @@ public class PlaylistService {
 
     /**
      * title를 받아서 Playlist를 검색함
-     * @param title
-     * @param page
-     * @param pageSize
+     * @param title 영상 제목
+     * @param page default 0
+     * @param pageSize mobile 5 PC 9
      * @return List<PlaylistDTO>
      */
     public List<PlaylistDTO> searchByTitle(String title, int page, int pageSize) {
@@ -445,15 +445,15 @@ public class PlaylistService {
     }
 
     /**
-     * Mobile은 10 PC는 20, pageSize를 결정함
+     * Mobile은 5 PC는 9, pageSize를 결정함
      * @param userAgent Mobile로 접속한 건지 PC로 접속한 건지
      * @return pageSize
      */
     public int determinePageSize(String userAgent) {
         if (userAgent != null && userAgent.contains("Mobi")) {
-            return 10;
+            return 5;
         } else {
-            return 3;
+            return 9;
         }
     }
 }
