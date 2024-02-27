@@ -91,7 +91,6 @@ public class PlaylistService {
                     log.error("=================================");
                     log.error("list is empty");
                     log.error("=================================");
-                    // throw new YouTubePlaylistEmptyException("Your YouTube playlist is empty.");
                 }
                 for (PlaylistItem item : response.getItems()) {
                     String videoId = item.getSnippet().getResourceId().getVideoId();
@@ -155,8 +154,6 @@ public class PlaylistService {
         }
         Pageable pageable = PageRequest.of(page, pageSize);
         List<Playlist> playlists = playlistRepository.findAll(pageable).getContent();
-        log.info("page : " + page);
-        log.info("totalPages : " + totalPages);
         if (playlists.isEmpty() && page == 0) {
             log.info("==============================");
             log.info("Playlist is Empty, fetching from YouTube...");
@@ -193,12 +190,6 @@ public class PlaylistService {
     public void editVideo(EditVideoDTO editVideoDTO) {
         Playlist playlist = playlistRepository.findByVideoId(editVideoDTO.getVideoId())
                 .orElseThrow(() -> new PlaylistNotFoundException("Video with ID " + editVideoDTO.getVideoId() + " not found."));
-
-        log.info("===================================");
-        log.info(playlist.getVideoId());
-        log.info(editVideoDTO.getTitle());
-        log.info(editVideoDTO.getVideoId());
-        log.info("===================================");
 
         playlist.setTitle(editVideoDTO.getTitle());
         playlist.setDescription(editVideoDTO.getDescription());

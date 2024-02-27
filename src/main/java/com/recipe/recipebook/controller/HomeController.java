@@ -38,9 +38,6 @@ public class HomeController {
             totalPlaylistDTOS.addAll(playlistDTOS);
         }
         model.addAttribute("items", totalPlaylistDTOS);
-        log.info("================================================");
-        log.info("page : " + page);
-        log.info("================================================");
         return "home";
     }
 
