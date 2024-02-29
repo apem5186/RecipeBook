@@ -33,8 +33,7 @@
 
 ## 내용
 
-<details>
-  <summary><h4>메인페이지</h4></summary>
+<details> <summary><h4>메인페이지</h4></summary>
 
   > <image src="https://github.com/apem5186/RecipeBook/assets/81023500/c4f71613-3640-46ee-a18c-7cda162627c1"/>
   #### [관련 코드]
